@@ -2,22 +2,24 @@ package com.leadon.apigw.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.leadon.apigw.constant.AppConstant;
-import com.leadon.apigw.model.AchCustomerInfo;
-import com.leadon.apigw.model.DataObj;
-import com.leadon.apigw.model.TransAchDetail;
-import com.leadon.apigw.model.Transaction;
+import com.leadon.apigw.dto.NPResponse;
+import com.leadon.apigw.dto.RestDataObj;
+import com.leadon.apigw.model.*;
+import com.leadon.apigw.repository.TransAchActivityRepository;
 import com.leadon.apigw.repository.TransactionRepository;
 import com.leadon.apigw.service.AchCustomerInfoService;
+import com.leadon.apigw.service.KafkaProducerService;
 import com.leadon.apigw.service.NRTService;
-import com.leadon.apigw.util.DateUtil;
-import com.leadon.apigw.util.JsonUtil;
+import com.leadon.apigw.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.leadon.apigw.config.AppProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
@@ -35,43 +37,144 @@ public class NRTServiceImpl implements NRTService {
     @Autowired
     private AchCustomerInfoService achCustomerInfoService;
 
-    //@Autowired
-   // private KafkaProducerService producer;
+    @Autowired
+    private KafkaProducerService producer;
+
+    @Autowired
+    private TransAchActivityRepository transAchActivityRepository;
 
     @Override
     public DataObj fundTransferNRT(String iso8583Message) {
         String transId = "", eCode = "", eDesc = "";
         Transaction trans = new Transaction();
         TransAchDetail transAchDetail = new TransAchDetail();
-        DataObj dataObj = new DataObj();
+        DataObj objRes = new DataObj();
         try{
             JsonNode root = JsonUtil.toJsonNode(iso8583Message);
             parseNrtOut2Obj(root, trans, transAchDetail);
-            dataObj = transactionRepository.initTrans(trans, transAchDetail);
+            objRes = transactionRepository.initTrans(trans, transAchDetail);
 
-            eCode = dataObj.getEcode();
-            eDesc = dataObj.getEdesc();
+            eCode = objRes.getEcode();
+            eDesc = objRes.getEdesc();
             logger.debug("After Init trans, errCode: " + eCode + ", errDesc: " + eDesc + ", transId: "
                     + trans.getTransId() + ", senderRef: " + transAchDetail.getSenderRefId());
             if (!AppConstant.SystemResponse.SUCCESS_CODE.equalsIgnoreCase(eCode)) {
-                return dataObj;
+                return objRes;
             }
             transId = trans.getTransId().toString();
             // luu log msg
-            //producer.pushMsgLogReq(transId, iso8583Message, trans.getChannelId(), AppConstant.LogConfig.BANK,AppConstant.LogConfig.CATEGORY_INTERNAL);
-            //logger.debug("After producer.pushMsgLogReq");
+            producer.pushMsgLogReq(transId, iso8583Message, trans.getChannelId(), AppConstant.LogConfig.BANK,AppConstant.LogConfig.CATEGORY_INTERNAL);
+            logger.debug("After producer.pushMsgLogReq");
+
+            String year = new SimpleDateFormat("yyyy").format(new Date());
+            String[] arrParam = {year + JsonUtil.getVal(root, "/body/iso8583/DE013_LOC_TRN_DATE").asText()
+                    + JsonUtil.getVal(root, "/body/iso8583/DE012_LOC_TRN_TIME").asText()};
+            String senderRefId = ACHUtil.generateSenderRefId(transId, AppConstant.MsgIdr.PACS008,
+                    transAchDetail.getDbtrMemId(), AppConstant.SenderRefType.SENDER_REF_NORMAL, arrParam);
+            transAchDetail.setSenderRefId(senderRefId);
+            // String jsonRequest = this.buildJsonFTReq(ftMsg, transId);
+            // Push iso8583 message
+            producer.pushIso8583Message(transId, senderRefId, iso8583Message, iso8583Message, AppConstant.LogConfig.REQUEST , AppConstant.LogConfig.COREBANKING, AppConstant.LogConfig.BANK,
+                    AppConstant.LogConfig.CATEGORY_INTERNAL);
+            String jsonRequest = MsgBuilder.buildPacs008(root, trans, transAchDetail);
+            /// luu log callNapas va activity request
+            /// insert log call napas va trans activity request
+            producer.pushMsgLogReq(transId, jsonRequest, AppConstant.LogConfig.BANK, AppConstant.LogConfig.NAPAS,
+                    AppConstant.LogConfig.CATEGORY_NAPAS);
+            // Push activity request of bank iso8583 ach
+            transAchActivityRepository.pushActivity(trans.getTransId(), senderRefId, AppConstant.MsgIdr.ISO8583,
+                    "Core send message NRT iso8583 to ACH", AppConstant.LogConfig.REQUEST, iso8583Message, new Date(),
+                    AppConstant.TransStep.ACT_STEP_SEND_NRT, AppConstant.SystemResponse.SUCCESS_CODE,
+                    AppConstant.SystemResponse.SUCCESS_DESC);
+
+            // Push activity request of send pacs008 to napas
+            transAchActivityRepository.pushActivity(trans.getTransId(), senderRefId, AppConstant.MsgIdr.PACS008,
+                    "Send pacs008 to Napas", AppConstant.LogConfig.REQUEST, jsonRequest, new Date(),
+                    AppConstant.TransStep.ACT_STEP_PUTMX, AppConstant.SystemResponse.SUCCESS_CODE,
+                    AppConstant.SystemResponse.SUCCESS_DESC);
+//            RestDataObj restData = NapasCaller.send2Napas(jsonRequest, AppConstant.MsgIdr.PACS008, senderRefId,
+//                    AppConstant.ACHService.DIRECT_CREDIT);
+            RestDataObj restData = new RestDataObj();
+            restData = new RestDataObj();
+            restData.setHttpStatus("200");
+            restData.setResponse("{\"type\":\"success\",\"message\":\"Message successfully processed\",\"duplicated\":false}");
+
+            objRes = handleFundTransferNrtNPResp(restData);
+            Long activitiId= transAchActivityRepository.checkExsitIso8583ToBank(Long.parseLong(transId), AppConstant.MsgIdr.ISO8583, AppConstant.TransStep.ACT_STEP_SEND_NRT);
+            logger.info("+++checkExsitIso8583ToBank:" + activitiId);
+            if (!StringUtils.isEmpty(activitiId)) {
+                return objRes;
+            }
+            else if(activitiId == null && objRes != null && !AppConstant.SystemResponse.NAPAS_RESPONSE_CODE_SUCCESS.equals(objRes.getEcode())){
+                // get err code
+//				DataObj dataObjNP = null;
+//				dataObjNP = transactionRepository.mapErrorCode(AppConstant.Common.ORG_NAPAS, AppConstant.ChannelId.ACH,
+//						objRes.getEcode());
+                String bankEcode = StringUtils.isEmpty(objRes.getEcode()) ? "30" : objRes.getEcode();
+                String bankEdesc = StringUtils.isEmpty(objRes.getEdesc()) ? AppConstant.ResponseMsg.RESP_INVALID_MESSAGE : objRes.getEdesc();
+
+                logger.debug("++++Starting push to queue send to bank!, error code:" + bankEcode + ", error desc:" + bankEdesc);
+                // Push msg to queue
+//                CustomKafkaMessage kkMsg = new CustomKafkaMessage();
+//                kkMsg.setSenderRefId(senderRefId);
+//                kkMsg.setErrCode(bankEcode);
+//                kkMsg.setErrDesc(bankEdesc);
+//                kkMsg.setMessage(iso8583Message);
+//                kkMsg.setMsgIdr(AppConstant.MsgIdr.ISO8583);
+//                kkMsg.setActStep(AppConstant.TransStep.ACT_STEP_SEND_PACS008);
+//                kkMsg.setActDesc("Send Pacs008 message ISO8583 to Bank");
+//                kkMsg.setTransId(transId);
+//                producer.sendMessage(kkMsg, AppConstant.QueueConfig.TOPIC_NACK_IN_ISO8583);
+            }
+            logger.debug("After call napas, errCode: " + objRes.getEcode() + ", errDesc: " + objRes.getEdesc()
+                    + ", transId: " + trans.getTransId() + ", senderRef: " + transAchDetail.getSenderRefId());
+            /// insert log call napas va tran activity response
+            producer.pushMsgLogRes(transId, ACHUtil.parseObjectToString(restData), AppConstant.LogConfig.BANK,
+                    AppConstant.LogConfig.NAPAS, AppConstant.LogConfig.CATEGORY_NAPAS);
+
+            TransAchActivity transAchActivity = new TransAchActivity();
+            transAchActivity.setTransId(Long.parseLong(transId));
+            transAchActivity.setActivityDesc("Receiver from Napas");
+            transAchActivity.setActivityStep(AppConstant.TransStep.ACT_STEP_PUTMX);
+            transAchActivity.setMsgContent(ACHUtil.parseObjectToString(restData));
+            transAchActivity.setMsgIdentifier(AppConstant.MsgIdr.PACS008);
+            transAchActivity.setMsgType(AppConstant.LogConfig.RESPONSE);
+            transAchActivity.setSenderRefId(senderRefId);
+            transAchActivity.setCreatedOn(new Date());
+            transAchActivity.setMsgDt(new Date());
+            transAchActivity.setErrCode(objRes.getEcode());
+            transAchActivity.setErrDesc(objRes.getEdesc());
+
+            transAchDetail.setMsgIdentifier(AppConstant.MsgIdr.PACS008);
+            transAchDetail.setInstrId(transAchDetail.getInstrId());
+            transAchDetail.setEndtoendId(transAchDetail.getEndtoendId());
+            transAchDetail.setSenderRefId(senderRefId);
+            transAchDetail.setTxId(senderRefId);
+            transAchDetail.setTransStep(AppConstant.TransStep.ACT_STEP_PUTMX);
+            transAchDetail.setOrgSenderRefId(senderRefId);
+            transAchDetail.setSettleDt(transAchDetail.getSettleDt());
+            transAchDetail.setChargeBr(transAchDetail.getChargeBr());
+            transAchDetail.setErrDesc(objRes.getEdesc());
+            transAchDetail.setErrCode(objRes.getEcode());
+
+            DataObj dataObjLogHandle = transactionRepository.handleAchDetailActivity(transAchDetail, transAchActivity);
+            String outEcode = dataObjLogHandle.getEcode();
+            String outEdesc = dataObjLogHandle.getEdesc();
+
+            logger.debug("After call handleAchDetailAct, errCode: " + outEcode + ", errDesc: " + outEdesc
+                    + ", transId: " + trans.getTransId() + ", senderRef: " + transAchDetail.getSenderRefId());
         } catch (Exception e) {
 
             logger.error("Exception fundTransferNRT: " + e.getMessage());
             eCode = AppConstant.SystemResponse.EXCEPRION_ERROR_CODE;
             eDesc = AppConstant.SystemResponse.EXCEPRION_ERROR_DESC;
-            dataObj.setEcode(eCode);
-            dataObj.setEdesc(eDesc);
+            objRes.setEcode(eCode);
+            objRes.setEdesc(eDesc);
         } finally {
-//            if (!DataUtil.isNullObject(trans.getTransId()))
-//                transactionRepository.updateTransStatus(trans.getTransId(), objRes.getEcode(), objRes.getEdesc());
+            if (!DataUtil.isNullObject(trans.getTransId()))
+                transactionRepository.updateTransStatus(trans.getTransId(), objRes.getEcode(), objRes.getEdesc());
         }
-        return dataObj;
+        return objRes;
     }
 
 
@@ -247,5 +350,33 @@ public class NRTServiceImpl implements NRTService {
         } catch (Exception e) {
             logger.error("Exception when handle parseNrtOut2Obj:" + e.getMessage());
         }
+    }
+
+    private DataObj handleFundTransferNrtNPResp(RestDataObj restDataObj) {
+        DataObj dataObj = new DataObj();
+        try {
+            String partnerCode = AppConstant.AchEcode.ECODE_UNKONW;
+            if (restDataObj != null && restDataObj.getHttpStatus() != null && restDataObj.getResponse() != null) {
+                if (AppConstant.HTTPConfig.HTTP_STATUS_200.equals(restDataObj.getHttpStatus())) {
+                    NPResponse npResponse = JsonUtil.parseJson2NPResponse(restDataObj.getResponse());
+                    partnerCode = restDataObj.getHttpStatus().toUpperCase() + "_" + (StringUtils.isEmpty(npResponse.getType()) ? "NULL" : npResponse.getType().toUpperCase())
+                            + "_" + (StringUtils.isEmpty(npResponse.getDuplicated()) ? "NULL" : npResponse.getDuplicated().toUpperCase());
+                } else if ("".equals(restDataObj.getHttpStatus())) {
+                    partnerCode = AppConstant.HTTPConfig.HTTP_STATUS_5XX;
+                } else {
+                    partnerCode = restDataObj.getHttpStatus();
+                }
+            } else {
+                partnerCode = AppConstant.AchEcode.ECODE_SYSTEM_ERROR;
+            }
+            logger.info("+++partnerCode handleFundTransferNrtNPResp:" + partnerCode);
+            dataObj = transactionRepository.mapErrorCode(AppConstant.Common.ORG_NAPAS, AppConstant.ChannelId.ACH,
+                    partnerCode);
+        } catch (Exception e) {
+            logger.error("Exception when handle handleFundTransferNrtNPResp:" + e.getMessage());
+            dataObj.setEcode(AppConstant.SystemResponse.SYSTEM_ERROR_CODE);
+            dataObj.setEdesc(AppConstant.SystemResponse.SYSTEM_ERROR_DESC);
+        }
+        return dataObj;
     }
 }

@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import java.math.BigDecimal;
 
 @RestController
-@RequestMapping("/apigw/v1")
+//@RequestMapping("/apigw/v1")
 public class BankController extends BaseController{
     public static Logger logger = LoggerFactory.getLogger(BankController.class);
 
@@ -22,8 +22,8 @@ public class BankController extends BaseController{
     private NRTService nrtService;
 
 
-    @PutMapping(value = "/transfer", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<DataObj> transfer(@RequestBody String iso8583Message)
+    @PutMapping(value = "/cms/iach/91", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<DataObj> transfer1(@RequestBody String iso8583Message)
     {
         System.out.println("==== Received message from bank client:");
         System.out.println(iso8583Message);
@@ -33,5 +33,13 @@ public class BankController extends BaseController{
         // Return bank client
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
+    @PostMapping(value = "/transfer1", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> transfer(@RequestBody String iso8583Message)
+    {
+        System.out.println("==== Received message from bank client:");
+        System.out.println(iso8583Message);
+        // Return bank client
+        HttpStatus errorCode = HttpStatus.INTERNAL_SERVER_ERROR;
+        return new ResponseEntity<>(null, errorCode);
+    }
 }

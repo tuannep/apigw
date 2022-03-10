@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.leadon.apigw.dto.NPResponse;
 import org.springframework.util.ResourceUtils;
 //import vn.com.npgw.dto.NPResponse;
 
@@ -224,16 +225,16 @@ public class JsonUtil {
 		return builder.toString();
 	}
 	
-//	public static NPResponse parseJson2NPResponse(String jsonStr) {
-//		ObjectMapper objectMapper = new ObjectMapper();
-//		NPResponse npResponse = null;
-//		try {
-//			npResponse = objectMapper.readValue(jsonStr, NPResponse.class);
-//		} catch (IOException e) {
-//		    e.printStackTrace();
-//		}
-//		return npResponse;
-//	}
+	public static NPResponse parseJson2NPResponse(String jsonStr) {
+		ObjectMapper objectMapper = new ObjectMapper();
+		NPResponse npResponse = null;
+		try {
+			npResponse = objectMapper.readValue(jsonStr, NPResponse.class);
+		} catch (IOException e) {
+		    e.printStackTrace();
+		}
+		return npResponse;
+	}
 
 	private static ObjectMapper objectMapper = new ObjectMapper();
 
