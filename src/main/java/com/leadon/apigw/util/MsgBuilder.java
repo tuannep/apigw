@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.ResourceUtils;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -55,9 +56,9 @@ public class MsgBuilder {
 //					.readTree(ResourceUtils.getFile("classpath:" + AppConstant.JsonConfig.JSON_TEMP_CAMT009));
 //			CAMT011JSON = mapper
 //					.readTree(ResourceUtils.getFile("classpath:" + AppConstant.JsonConfig.JSON_TEMP_CAMT011));
-//			DASJSON = mapper.readTree(ResourceUtils.getFile("classpath:" + AppConstant.JsonConfig.JSON_TEMP_DAS));
-//			ISO8583JSON = mapper
-//					.readTree(ResourceUtils.getFile("classpath:" + AppConstant.JsonConfig.JSON_TEMP_ISO8583));
+			DASJSON = mapper.readTree(ResourceUtils.getFile("classpath:" + AppConstant.JsonConfig.JSON_TEMP_DAS));
+			ISO8583JSON = mapper
+					.readTree(ResourceUtils.getFile("classpath:" + AppConstant.JsonConfig.JSON_TEMP_ISO8583));
 		} catch (JsonMappingException e) {
 			e.printStackTrace();
 		} catch (JsonProcessingException e) {
@@ -1298,50 +1299,52 @@ public class MsgBuilder {
 //		return root.toPrettyString();
 //	}
 //
-//	public static String buildPacs028(String senderRefId, String transId, String orgSenderRefId, String orgTransDt) {
-//		JsonNode root = PACS028JSON.deepCopy();
-//		try {
-//			Date dateNow = new Date();
-//
-//			Date currDt = new Date();
-//
-//			String creDt = DateUtil.formatTimeStampZGMT0(currDt);
-//			String timestamp = DateUtil.formatTimeStampXXX(currDt);
-//			buildPayloadAppHdr(root, AppConstant.MsgIdr.PACS028, senderRefId, creDt);
-//
-//			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/GrpHdr/MsgId", senderRefId);
-//			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/GrpHdr/CreDtTm", timestamp);
-//			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/GrpHdr/InstgAgt/FinInstnId/ClrSysMmbId/MmbId",
-//					AppConstant.Common.SENDER_CODE);
-//			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/GrpHdr/InstdAgt/FinInstnId/ClrSysMmbId/MmbId",
-//					AppConstant.Common.BIC_NAPAS);
-//			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/OrgnlGrpInf/OrgnlMsgId", orgSenderRefId);
-//			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/OrgnlGrpInf/OrgnlMsgNmId",
-//					AppConstant.MsgIdr.PACS008);
-//
-//			SimpleDateFormat sdf6 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
-//			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/OrgnlGrpInf/OrgnlCreDtTm", sdf6.format(dateNow));
-//
-//			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/TxInf/OrgnlTxId", orgSenderRefId);
-//			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/TxInf/InstgAgt/FinInstnId/ClrSysMmbId/MmbId",
-//					AppConstant.Common.SENDER_CODE);
-//			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/TxInf/OrgnlTxRef/IntrBkSttlmDt",
-//					orgTransDt.substring(0, 10));
-//
-//			// String signature = Crypto.createSign("RSA2048", payload,
-//			// "D:\\\\RSA Key
-//			// live\\\\Bank_PrivateKey.cer");
-////			String signature = "";
-//			String payload = JsonUtil.getVal(root, "/Payload").toString();
-//			String signature = Crypto.createSign("RSA2048", payload, null);
-//			buildMsgHeader(root, senderRefId, AppConstant.MsgIdr.PACS028, timestamp, signature);
-//		} catch (Exception e) {
-//			logger.error("Exception when handle buildPacs028:" + e.getMessage());
-//			return "";
-//		}
-//		return root.toPrettyString();
-//	}
-//
+	public static String buildPacs028(String senderRefId, String transId, String orgSenderRefId, String orgTransDt) {
+		JsonNode root = PACS028JSON.deepCopy();
+		try {
+			Date dateNow = new Date();
+
+			Date currDt = new Date();
+
+			String creDt = DateUtil.formatTimeStampZGMT0(currDt);
+			String timestamp = DateUtil.formatTimeStampXXX(currDt);
+			buildPayloadAppHdr(root, AppConstant.MsgIdr.PACS028, senderRefId, creDt);
+
+			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/GrpHdr/MsgId", senderRefId);
+			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/GrpHdr/CreDtTm", timestamp);
+			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/GrpHdr/InstgAgt/FinInstnId/ClrSysMmbId/MmbId",
+					AppConstant.Common.SENDER_CODE);
+			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/GrpHdr/InstdAgt/FinInstnId/ClrSysMmbId/MmbId",
+					AppConstant.Common.BIC_NAPAS);
+			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/OrgnlGrpInf/OrgnlMsgId", orgSenderRefId);
+			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/OrgnlGrpInf/OrgnlMsgNmId",
+					AppConstant.MsgIdr.PACS008);
+
+			SimpleDateFormat sdf6 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/OrgnlGrpInf/OrgnlCreDtTm", sdf6.format(dateNow));
+
+			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/TxInf/OrgnlTxId", orgSenderRefId);
+			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/TxInf/InstgAgt/FinInstnId/ClrSysMmbId/MmbId",
+					AppConstant.Common.SENDER_CODE);
+			JsonUtil.setVal(root, "/Payload/Document/FIToFIPmtStsReq/TxInf/OrgnlTxRef/IntrBkSttlmDt",
+					orgTransDt.substring(0, 10));
+
+			// String signature = Crypto.createSign("RSA2048", payload,
+			// "D:\\\\RSA Key
+			// live\\\\Bank_PrivateKey.cer");
+//			String signature = "";
+			String payload = JsonUtil.getVal(root, "/Payload").toString();
+			// TODO
+			//String signature = Crypto.createSign("RSA2048", payload, null);
+			String signature = "";
+			buildMsgHeader(root, senderRefId, AppConstant.MsgIdr.PACS028, timestamp, signature);
+		} catch (Exception e) {
+			logger.error("Exception when handle buildPacs028:" + e.getMessage());
+			return "";
+		}
+		return root.toPrettyString();
+	}
+
 //	public static String buildCamt033(CopyPaymentDto copyPayDto, String transId, String senderRefId) {
 //		JsonNode root = CAMT033JSON.deepCopy();
 //		try {
@@ -1786,71 +1789,71 @@ public class MsgBuilder {
 //		return root.toPrettyString();
 //	}
 //
-//	public static String buildDas(JsonNode rootIso8583, String transId) {
-//		JsonNode root = DASJSON.deepCopy();
-//		try {
-//
-//			JsonUtil.setVal(root, "/msgType", JsonUtil.getVal(rootIso8583, "/body/iso8583/MTI").asText());
-//			JsonUtil.setVal(root, "/PAN", JsonUtil.getVal(rootIso8583, "/body/iso8583/DE002_PAN").asText());
-//			JsonUtil.setVal(root, "/processingCode",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE003_PROC_CD").asText());
-//			JsonUtil.setVal(root, "/transAmount", JsonUtil.getVal(rootIso8583, "/body/iso8583/DE004_TRN_AMT").asText());
-//			JsonUtil.setVal(root, "/transmissionDateTime",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE007_TRN_DT").asText());
-//			JsonUtil.setVal(root, "/systemTraceAuditNum",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE011_TRACE_NO").asText());
-//			JsonUtil.setVal(root, "/localTime",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE012_LOC_TRN_TIME").asText());
-//			JsonUtil.setVal(root, "/localDate",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE013_LOC_TRN_DATE").asText());
-//			JsonUtil.setVal(root, "/settlementDate",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE015_STL_DATE").asText());
-//			JsonUtil.setVal(root, "/pointOfServiceEntryCode",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE022_POS_MODE").asText());
-//			JsonUtil.setVal(root, "/pointOfServiceConditionCode",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE025_POS_COND_CD").asText());
-//			JsonUtil.setVal(root, "/sendingMember",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE032_ACQ_CD").asText());
-//			JsonUtil.setVal(root, "/retRefNumber",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE037_REL_REF_NO").asText());
-//			JsonUtil.setVal(root, "/cardAcceptorTerminalId",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE041_CRD_ACPT_TRM").asText());
-//			JsonUtil.setVal(root, "/cardAcceptorId",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE042_CRD_ACPT_ID").asText());
-//			JsonUtil.setVal(root, "/cardAcceptorNameLocation",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE043_CRD_ACPT_LOC").asText());
-//			JsonUtil.setVal(root, "/additionalDataPrivate",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE048_ADD_PRV_INF").asText());
-//			JsonUtil.setVal(root, "/transCurrencyCode",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE049_TRN_CCY").asText());
-//			JsonUtil.setVal(root, "/usrDefinedField",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE060_CNL_TP").asText());
-//			JsonUtil.setVal(root, "/serviceCode",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE062_NAP_SVC_CD").asText());
-//			JsonUtil.setVal(root, "/receivingMember",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE100_BEN_CD").asText());
-//			JsonUtil.setVal(root, "/senderAcc",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE102_SND_ACC_INF").asText());
-//
-//			String transRefNumber = ("".equals(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE063_TRN_REF_NO").asText()))
-//					? ACHUtil.subStringbyIndex(transId, 16)
-//					: JsonUtil.getVal(rootIso8583, "/body/iso8583/DE063_TRN_REF_NO").asText();
-//			JsonUtil.setVal(root, "/transRefNumber", transRefNumber);
-//
-//			JsonUtil.setVal(root, "/receiverAcc",
-//					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE103_RCV_ACC_INF").asText());
-//
-//			String contentTransfers = JsonUtil.getVal(rootIso8583, "/body/iso8583/DE104_TRN_CONT").asText();
-//			JsonUtil.setVal(root, "/contentTransfers", StringUtils.isEmpty(contentTransfers) ? AppConstant.MsgDesc.DESC_CONTENT_DEFAULT : contentTransfers);
-//
-//			JsonUtil.setVal(root, "/MAC", JsonUtil.getVal(rootIso8583, "/body/iso8583/DE128_MAC_DAT").asText());
-//		} catch (Exception e) {
-//			logger.error("Exception when handle buildDas:" + e.getMessage());
-//			return "";
-//		}
-//		return root.toPrettyString();
-//	}
-//
+	public static String buildDas(JsonNode rootIso8583, String transId) {
+		JsonNode root = DASJSON.deepCopy();
+		try {
+
+			JsonUtil.setVal(root, "/msgType", JsonUtil.getVal(rootIso8583, "/body/iso8583/MTI").asText());
+			JsonUtil.setVal(root, "/PAN", JsonUtil.getVal(rootIso8583, "/body/iso8583/DE002_PAN").asText());
+			JsonUtil.setVal(root, "/processingCode",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE003_PROC_CD").asText());
+			JsonUtil.setVal(root, "/transAmount", JsonUtil.getVal(rootIso8583, "/body/iso8583/DE004_TRN_AMT").asText());
+			JsonUtil.setVal(root, "/transmissionDateTime",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE007_TRN_DT").asText());
+			JsonUtil.setVal(root, "/systemTraceAuditNum",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE011_TRACE_NO").asText());
+			JsonUtil.setVal(root, "/localTime",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE012_LOC_TRN_TIME").asText());
+			JsonUtil.setVal(root, "/localDate",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE013_LOC_TRN_DATE").asText());
+			JsonUtil.setVal(root, "/settlementDate",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE015_STL_DATE").asText());
+			JsonUtil.setVal(root, "/pointOfServiceEntryCode",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE022_POS_MODE").asText());
+			JsonUtil.setVal(root, "/pointOfServiceConditionCode",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE025_POS_COND_CD").asText());
+			JsonUtil.setVal(root, "/sendingMember",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE032_ACQ_CD").asText());
+			JsonUtil.setVal(root, "/retRefNumber",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE037_REL_REF_NO").asText());
+			JsonUtil.setVal(root, "/cardAcceptorTerminalId",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE041_CRD_ACPT_TRM").asText());
+			JsonUtil.setVal(root, "/cardAcceptorId",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE042_CRD_ACPT_ID").asText());
+			JsonUtil.setVal(root, "/cardAcceptorNameLocation",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE043_CRD_ACPT_LOC").asText());
+			JsonUtil.setVal(root, "/additionalDataPrivate",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE048_ADD_PRV_INF").asText());
+			JsonUtil.setVal(root, "/transCurrencyCode",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE049_TRN_CCY").asText());
+			JsonUtil.setVal(root, "/usrDefinedField",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE060_CNL_TP").asText());
+			JsonUtil.setVal(root, "/serviceCode",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE062_NAP_SVC_CD").asText());
+			JsonUtil.setVal(root, "/receivingMember",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE100_BEN_CD").asText());
+			JsonUtil.setVal(root, "/senderAcc",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE102_SND_ACC_INF").asText());
+
+			String transRefNumber = ("".equals(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE063_TRN_REF_NO").asText()))
+					? ACHUtil.subStringbyIndex(transId, 16)
+					: JsonUtil.getVal(rootIso8583, "/body/iso8583/DE063_TRN_REF_NO").asText();
+			JsonUtil.setVal(root, "/transRefNumber", transRefNumber);
+
+			JsonUtil.setVal(root, "/receiverAcc",
+					JsonUtil.getVal(rootIso8583, "/body/iso8583/DE103_RCV_ACC_INF").asText());
+
+			String contentTransfers = JsonUtil.getVal(rootIso8583, "/body/iso8583/DE104_TRN_CONT").asText();
+			JsonUtil.setVal(root, "/contentTransfers", StringUtils.isEmpty(contentTransfers) ? AppConstant.MsgDesc.DESC_CONTENT_DEFAULT : contentTransfers);
+
+			JsonUtil.setVal(root, "/MAC", JsonUtil.getVal(rootIso8583, "/body/iso8583/DE128_MAC_DAT").asText());
+		} catch (Exception e) {
+			logger.error("Exception when handle buildDas:" + e.getMessage());
+			return "";
+		}
+		return root.toPrettyString();
+	}
+
 	public static void buildMsgHeader(JsonNode root, String senderRef, String msgIdr, String timestamp, String sign) {
 		JsonUtil.setVal(root, "/Header/SenderReference", senderRef);
 		JsonUtil.setVal(root, "/Header/MessageIdentifier", msgIdr);
@@ -1875,125 +1878,125 @@ public class MsgBuilder {
 		JsonUtil.setVal(root, "/Payload/AppHdr/CreDt", creDt);
 	}
 //
-//	public static String buildISO8583Das(String messageDas, String globalId) {
-//		JsonNode root = ISO8583JSON.deepCopy();
-//		try {
-//			ObjectMapper objectMapper = new ObjectMapper();
-//			JsonNode rootDas = objectMapper.readTree(messageDas);
-//
-////			JsonUtil.setVal(root, "/header/GLB_ID", JsonUtil.getVal(rootDas, "/").asText());
-//			JsonUtil.setVal(root, "/header/GLB_ID", globalId);
-//
-//			JsonUtil.setVal(root, "/body/iso8583/MTI", JsonUtil.getVal(rootDas, "/msgType").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE002_PAN", JsonUtil.getVal(rootDas, "/PAN").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE003_PROC_CD", JsonUtil.getVal(rootDas, "/processingCode").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE004_TRN_AMT", JsonUtil.getVal(rootDas, "/transAmount").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE007_TRN_DT",
-//					JsonUtil.getVal(rootDas, "/transmissionDateTime").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE011_TRACE_NO",
-//					JsonUtil.getVal(rootDas, "/systemTraceAuditNum").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE012_LOC_TRN_TIME", JsonUtil.getVal(rootDas, "/localTime").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE013_LOC_TRN_DATE", JsonUtil.getVal(rootDas, "/localDate").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE015_STL_DATE", JsonUtil.getVal(rootDas, "/settlementDate").asText());
-////			JsonUtil.setVal(root, "/body/iso8583/DE018_MER_CAT_CD", JsonUtil.getVal(rootDas, "/merchantType").asText());
-//
-//			if ("0200".equals(JsonUtil.getVal(root, "/body/iso8583/MTI").asText())){
-//				// remove
-//				JsonUtil.remove(root, "/body/iso8583/DE038_AUTH_ID_RES");
-//				JsonUtil.remove(root, "/body/iso8583/DE039_RES_CD");
-//				JsonUtil.remove(root, "/body/iso8583/DE120_BEN_INF");
-//
-//
-//				JsonUtil.setVal(root, "/body/iso8583/DE022_POS_MODE",
-//						JsonUtil.getVal(rootDas, "/pointOfServiceEntryCode").asText());
-//				JsonUtil.setVal(root, "/body/iso8583/DE025_POS_COND_CD",
-//						JsonUtil.getVal(rootDas, "/pointOfServiceConditionCode").asText());
-//				if (StringUtils.isNotEmpty(JsonUtil.getVal(rootDas, "/cardAcceptorId").asText())) {
-//                    JsonUtil.setVal(root, "/body/iso8583/DE042_CRD_ACPT_ID",
-//                            JsonUtil.getVal(rootDas, "/cardAcceptorId").asText());
-//                } else {
-//                    JsonUtil.remove(root, "/body/iso8583/DE042_CRD_ACPT_ID");
-//                }
-//				JsonUtil.setVal(root, "/body/iso8583/DE043_CRD_ACPT_LOC",
-//						JsonUtil.getVal(rootDas, "/cardAcceptorNameLocation").asText());
-//
-//
-//			}
-//
-//
-//			JsonUtil.setVal(root, "/body/iso8583/DE032_ACQ_CD", JsonUtil.getVal(rootDas, "/sendingMember").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE037_REL_REF_NO", JsonUtil.getVal(rootDas, "/retRefNumber").asText());
-//
-//
-//			if ("0210".equals(JsonUtil.getVal(root, "/body/iso8583/MTI").asText())) {
-//				// remove
-//				JsonUtil.remove(root, "/body/iso8583/DE022_POS_MODE");
-//				JsonUtil.remove(root, "/body/iso8583/DE025_POS_COND_CD");
-//				JsonUtil.remove(root, "/body/iso8583/DE042_CRD_ACPT_ID");
-//				JsonUtil.remove(root, "/body/iso8583/DE043_CRD_ACPT_LOC");
-//
-//				JsonUtil.setVal(root, "/body/iso8583/DE039_RES_CD", JsonUtil.getVal(rootDas, "/responseCode").asText());
-//
-//				String authIdResponse = JsonUtil.getVal(rootDas, "/authIdResponse").asText();
-//				JsonUtil.setVal(root, "/body/iso8583/DE038_AUTH_ID_RES",
-//						StringUtils.isEmpty(authIdResponse) ?  ACHUtil.getNumberRandom(6): authIdResponse);
-//				JsonUtil.setVal(root, "/body/iso8583/DE120_BEN_INF",
-//						JsonUtil.getVal(rootDas, "/accountHolderName").asText());
-//			}
-//			JsonUtil.setVal(root, "/body/iso8583/DE041_CRD_ACPT_TRM",
-//					JsonUtil.getVal(rootDas, "/cardAcceptorTerminalId").asText());
-//
-//			if (StringUtils.isNotEmpty(JsonUtil.getVal(rootDas, "/additionalDataPrivate").asText())) {
-//                JsonUtil.setVal(root, "/body/iso8583/DE048_ADD_PRV_INF",
-//                        JsonUtil.getVal(rootDas, "/additionalDataPrivate").asText());
-//            } else {
-//                JsonUtil.remove(root, "/body/iso8583/DE048_ADD_PRV_INF");
-//            }
-//			JsonUtil.setVal(root, "/body/iso8583/DE049_TRN_CCY",
-//					JsonUtil.getVal(rootDas, "/transCurrencyCode").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE060_CNL_TP", JsonUtil.getVal(rootDas, "/usrDefinedField").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE062_NAP_SVC_CD", JsonUtil.getVal(rootDas, "/serviceCode").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE063_TRN_REF_NO",
-//					JsonUtil.getVal(rootDas, "/transRefNumber").asText());
-//			if (StringUtils.isNotEmpty(JsonUtil.getVal(rootDas, "/receivingMember").asText()))
-//			    JsonUtil.setVal(root, "/body/iso8583/DE100_BEN_CD", JsonUtil.getVal(rootDas, "/receivingMember").asText());
-//			else
-//                JsonUtil.remove(root, "/body/iso8583/DE100_BEN_CD");
-//			JsonUtil.setVal(root, "/body/iso8583/DE102_SND_ACC_INF", JsonUtil.getVal(rootDas, "/senderAcc").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE103_RCV_ACC_INF", JsonUtil.getVal(rootDas, "/receiverAcc").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE104_TRN_CONT",
-//					JsonUtil.getVal(rootDas, "/contentTransfers").asText());
-//
-//			JsonUtil.setVal(root, "/body/iso8583/DE128_MAC_DAT", JsonUtil.getVal(rootDas, "/MAC").asText());
-//
-//			JsonUtil.remove(root, "/body/iso8583/DE005_STL_AMT");
-//			JsonUtil.remove(root, "/body/iso8583/DE006_BIL_AMT");
-//			JsonUtil.remove(root, "/body/iso8583/DE018_MER_CAT_CD");
-//			JsonUtil.remove(root, "/body/iso8583/DE026_PIN_CAP_CD");
-//			JsonUtil.remove(root, "/body/iso8583/DE035_TRK2_DAT");
-//			JsonUtil.remove(root, "/body/iso8583/DE036_TRK3_DAT");
-//			JsonUtil.remove(root, "/body/iso8583/DE023_CRD_SEQ_NO");
-//			JsonUtil.remove(root, "/body/iso8583/DE010_BIL_CONV_RT");
-//
-//			JsonUtil.remove(root, "/body/iso8583/DE051_BIL_CCY");
-//			JsonUtil.remove(root, "/body/iso8583/DE045_TRK1_DAT");
-//			JsonUtil.remove(root, "/body/iso8583/DE052_PIN");
-//			JsonUtil.remove(root, "/body/iso8583/DE054_ADD_AMT");
-//			JsonUtil.remove(root, "/body/iso8583/DE055_EMV_DAT");
-//			JsonUtil.remove(root, "/body/iso8583/DE070_NET_MGT_CD");
-//			JsonUtil.remove(root, "/body/iso8583/DE090_ORG_TRN_KEY");
-//			JsonUtil.remove(root, "/body/iso8583/DE105_NEW_PIN");
-//			JsonUtil.remove(root, "/body/iso8583/DE009_STL_CONV_RT");
-//			JsonUtil.remove(root, "/body/iso8583/DE019_ACQ_CTRY_CD");
-//			JsonUtil.remove(root, "/body/iso8583/DE050_STL_CCY");
-//			JsonUtil.remove(root, "/body/iso8583/DE060_CNL_TP");
-//
-//		} catch (Exception e) {
-//			logger.error("Exception when handle buildDas8583:" + e.getMessage());
-//			return "";
-//		}
-//		return root.toPrettyString();
-//	}
+	public static String buildISO8583Das(String messageDas, String globalId) {
+		JsonNode root = ISO8583JSON.deepCopy();
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			JsonNode rootDas = objectMapper.readTree(messageDas);
+
+//			JsonUtil.setVal(root, "/header/GLB_ID", JsonUtil.getVal(rootDas, "/").asText());
+			JsonUtil.setVal(root, "/header/GLB_ID", globalId);
+
+			JsonUtil.setVal(root, "/body/iso8583/MTI", JsonUtil.getVal(rootDas, "/msgType").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE002_PAN", JsonUtil.getVal(rootDas, "/PAN").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE003_PROC_CD", JsonUtil.getVal(rootDas, "/processingCode").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE004_TRN_AMT", JsonUtil.getVal(rootDas, "/transAmount").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE007_TRN_DT",
+					JsonUtil.getVal(rootDas, "/transmissionDateTime").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE011_TRACE_NO",
+					JsonUtil.getVal(rootDas, "/systemTraceAuditNum").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE012_LOC_TRN_TIME", JsonUtil.getVal(rootDas, "/localTime").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE013_LOC_TRN_DATE", JsonUtil.getVal(rootDas, "/localDate").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE015_STL_DATE", JsonUtil.getVal(rootDas, "/settlementDate").asText());
+//			JsonUtil.setVal(root, "/body/iso8583/DE018_MER_CAT_CD", JsonUtil.getVal(rootDas, "/merchantType").asText());
+
+			if ("0200".equals(JsonUtil.getVal(root, "/body/iso8583/MTI").asText())){
+				// remove
+				JsonUtil.remove(root, "/body/iso8583/DE038_AUTH_ID_RES");
+				JsonUtil.remove(root, "/body/iso8583/DE039_RES_CD");
+				JsonUtil.remove(root, "/body/iso8583/DE120_BEN_INF");
+
+
+				JsonUtil.setVal(root, "/body/iso8583/DE022_POS_MODE",
+						JsonUtil.getVal(rootDas, "/pointOfServiceEntryCode").asText());
+				JsonUtil.setVal(root, "/body/iso8583/DE025_POS_COND_CD",
+						JsonUtil.getVal(rootDas, "/pointOfServiceConditionCode").asText());
+				if (StringUtils.isNotEmpty(JsonUtil.getVal(rootDas, "/cardAcceptorId").asText())) {
+                    JsonUtil.setVal(root, "/body/iso8583/DE042_CRD_ACPT_ID",
+                            JsonUtil.getVal(rootDas, "/cardAcceptorId").asText());
+                } else {
+                    JsonUtil.remove(root, "/body/iso8583/DE042_CRD_ACPT_ID");
+                }
+				JsonUtil.setVal(root, "/body/iso8583/DE043_CRD_ACPT_LOC",
+						JsonUtil.getVal(rootDas, "/cardAcceptorNameLocation").asText());
+
+
+			}
+
+
+			JsonUtil.setVal(root, "/body/iso8583/DE032_ACQ_CD", JsonUtil.getVal(rootDas, "/sendingMember").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE037_REL_REF_NO", JsonUtil.getVal(rootDas, "/retRefNumber").asText());
+
+
+			if ("0210".equals(JsonUtil.getVal(root, "/body/iso8583/MTI").asText())) {
+				// remove
+				JsonUtil.remove(root, "/body/iso8583/DE022_POS_MODE");
+				JsonUtil.remove(root, "/body/iso8583/DE025_POS_COND_CD");
+				JsonUtil.remove(root, "/body/iso8583/DE042_CRD_ACPT_ID");
+				JsonUtil.remove(root, "/body/iso8583/DE043_CRD_ACPT_LOC");
+
+				JsonUtil.setVal(root, "/body/iso8583/DE039_RES_CD", JsonUtil.getVal(rootDas, "/responseCode").asText());
+
+				String authIdResponse = JsonUtil.getVal(rootDas, "/authIdResponse").asText();
+				JsonUtil.setVal(root, "/body/iso8583/DE038_AUTH_ID_RES",
+						StringUtils.isEmpty(authIdResponse) ?  ACHUtil.getNumberRandom(6): authIdResponse);
+				JsonUtil.setVal(root, "/body/iso8583/DE120_BEN_INF",
+						JsonUtil.getVal(rootDas, "/accountHolderName").asText());
+			}
+			JsonUtil.setVal(root, "/body/iso8583/DE041_CRD_ACPT_TRM",
+					JsonUtil.getVal(rootDas, "/cardAcceptorTerminalId").asText());
+
+			if (StringUtils.isNotEmpty(JsonUtil.getVal(rootDas, "/additionalDataPrivate").asText())) {
+                JsonUtil.setVal(root, "/body/iso8583/DE048_ADD_PRV_INF",
+                        JsonUtil.getVal(rootDas, "/additionalDataPrivate").asText());
+            } else {
+                JsonUtil.remove(root, "/body/iso8583/DE048_ADD_PRV_INF");
+            }
+			JsonUtil.setVal(root, "/body/iso8583/DE049_TRN_CCY",
+					JsonUtil.getVal(rootDas, "/transCurrencyCode").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE060_CNL_TP", JsonUtil.getVal(rootDas, "/usrDefinedField").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE062_NAP_SVC_CD", JsonUtil.getVal(rootDas, "/serviceCode").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE063_TRN_REF_NO",
+					JsonUtil.getVal(rootDas, "/transRefNumber").asText());
+			if (StringUtils.isNotEmpty(JsonUtil.getVal(rootDas, "/receivingMember").asText()))
+			    JsonUtil.setVal(root, "/body/iso8583/DE100_BEN_CD", JsonUtil.getVal(rootDas, "/receivingMember").asText());
+			else
+                JsonUtil.remove(root, "/body/iso8583/DE100_BEN_CD");
+			JsonUtil.setVal(root, "/body/iso8583/DE102_SND_ACC_INF", JsonUtil.getVal(rootDas, "/senderAcc").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE103_RCV_ACC_INF", JsonUtil.getVal(rootDas, "/receiverAcc").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE104_TRN_CONT",
+					JsonUtil.getVal(rootDas, "/contentTransfers").asText());
+
+			JsonUtil.setVal(root, "/body/iso8583/DE128_MAC_DAT", JsonUtil.getVal(rootDas, "/MAC").asText());
+
+			JsonUtil.remove(root, "/body/iso8583/DE005_STL_AMT");
+			JsonUtil.remove(root, "/body/iso8583/DE006_BIL_AMT");
+			JsonUtil.remove(root, "/body/iso8583/DE018_MER_CAT_CD");
+			JsonUtil.remove(root, "/body/iso8583/DE026_PIN_CAP_CD");
+			JsonUtil.remove(root, "/body/iso8583/DE035_TRK2_DAT");
+			JsonUtil.remove(root, "/body/iso8583/DE036_TRK3_DAT");
+			JsonUtil.remove(root, "/body/iso8583/DE023_CRD_SEQ_NO");
+			JsonUtil.remove(root, "/body/iso8583/DE010_BIL_CONV_RT");
+
+			JsonUtil.remove(root, "/body/iso8583/DE051_BIL_CCY");
+			JsonUtil.remove(root, "/body/iso8583/DE045_TRK1_DAT");
+			JsonUtil.remove(root, "/body/iso8583/DE052_PIN");
+			JsonUtil.remove(root, "/body/iso8583/DE054_ADD_AMT");
+			JsonUtil.remove(root, "/body/iso8583/DE055_EMV_DAT");
+			JsonUtil.remove(root, "/body/iso8583/DE070_NET_MGT_CD");
+			JsonUtil.remove(root, "/body/iso8583/DE090_ORG_TRN_KEY");
+			JsonUtil.remove(root, "/body/iso8583/DE105_NEW_PIN");
+			JsonUtil.remove(root, "/body/iso8583/DE009_STL_CONV_RT");
+			JsonUtil.remove(root, "/body/iso8583/DE019_ACQ_CTRY_CD");
+			JsonUtil.remove(root, "/body/iso8583/DE050_STL_CCY");
+			JsonUtil.remove(root, "/body/iso8583/DE060_CNL_TP");
+
+		} catch (Exception e) {
+			logger.error("Exception when handle buildDas8583:" + e.getMessage());
+			return "";
+		}
+		return root.toPrettyString();
+	}
 //
 //	public static String buildISO8583NRT(String messagePacs008, String dbtrMemCode) {
 //		JsonNode root = ISO8583JSON.deepCopy();
@@ -2604,21 +2607,21 @@ public class MsgBuilder {
 //		return "91" + methodType1 + methodType2;
 //	}
 //
-//	public static String buildISO8583DASNACK(String msg, String err_code) {
-//		try {
-//			ObjectMapper objectMapper = new ObjectMapper();
-//			JsonNode root = objectMapper.readTree(msg);
-//
-//			JsonUtil.setVal(root, "/body/iso8583/MTI", "0210");
-//			JsonUtil.setVal(root, "/body/iso8583/DE039_RES_CD", err_code);
-//			JsonUtil.setVal(root, "/body/iso8583/DE0120_BEN_INF", "");
-//
-//			return root.toPrettyString();
-//		} catch (Exception e) {
-//			logger.error("Exception when handle buildDAS8583 NACK:" + e.getMessage());
-//			return "";
-//		}
-//	}
+	public static String buildISO8583DASNACK(String msg, String err_code) {
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			JsonNode root = objectMapper.readTree(msg);
+
+			JsonUtil.setVal(root, "/body/iso8583/MTI", "0210");
+			JsonUtil.setVal(root, "/body/iso8583/DE039_RES_CD", err_code);
+			JsonUtil.setVal(root, "/body/iso8583/DE0120_BEN_INF", "");
+
+			return root.toPrettyString();
+		} catch (Exception e) {
+			logger.error("Exception when handle buildDAS8583 NACK:" + e.getMessage());
+			return "";
+		}
+	}
 //	public static String checkGetCredt(String OrgDate) {
 //		DateUtil dateUtil = new DateUtil();
 //		logger.info("+++parse formatTimeStampZ:" + dateUtil.formatTimeStampZ(dateUtil.parseTimestampyyyyMMddHHmmss(OrgDate)));

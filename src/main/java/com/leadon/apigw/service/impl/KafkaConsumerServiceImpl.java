@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leadon.apigw.config.AppProperties;
 import com.leadon.apigw.constant.AppConstant;
 import com.leadon.apigw.kafka.CustomKafkaMessage;
+import com.leadon.apigw.model.AchCustomerInfo;
 import com.leadon.apigw.model.DataObj;
 import com.leadon.apigw.model.TransMessageIso8583;
 import com.leadon.apigw.model.TransMessageLog;
@@ -1020,38 +1021,38 @@ public class KafkaConsumerServiceImpl implements KafkaConsumerService {
 
     @KafkaListener(topics = "TOPIC.INQUIRY.SAVE.INFO", groupId = "group01")
     public void consumeAchCustomerInfo(CustomKafkaMessage kafkaMessage) {
-//        try {
-//            logger.debug("consumeAchCustomerInfo Consumed Message: "+ kafkaMessage.getTransId());
-//            AchCustomerInfo achCustomerInfo = new AchCustomerInfo();
-//            String typeTrans = "";
-//
-//            String orgMsgIso8583 = kafkaMessage.getMessage();
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            JsonNode rootIso8583 = objectMapper.readTree(orgMsgIso8583);
-//
-//            String acctNo = JsonUtil.getVal(rootIso8583, "/body/iso8583/DE103_RCV_ACC_INF").asText();
-//            achCustomerInfo.setCdtrAcctNo(acctNo);
-//            achCustomerInfo.setCdtrName(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE120_BEN_INF").asText());
-//            achCustomerInfo.setCdtrAddress(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE048_ADD_PRV_INF").asText());
-//            achCustomerInfo.setCdtrAcctType(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE003_PROC_CD").asText());
-//
-//            String transCate = JsonUtil.getVal(rootIso8583, "/body/iso8583/DE003_PROC_CD").asText();
-//            typeTrans = transCate.substring(4, 6);
-//            if (AppConstant.Common.ACCT.equals(typeTrans)) {
-//                achCustomerInfo.setCdtrMemId(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE100_BEN_CD").asText());
-//            } else if (AppConstant.Common.CARD.equals(typeTrans)) {
-//                achCustomerInfo.setCdtrMemId(acctNo.substring(0, 6));
-//            }
-//
-//            achCustomerInfo.setCcy(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE049_TRN_CCY").asText());
-//            achCustomerInfo.setDbtrAcctNo(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE102_SND_ACC_INF").asText());
-//            achCustomerInfo.setDbtrMemId(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE032_ACQ_CD").asText());
-//            achCustomerInfo.setModifiedOn(new Date());
-//
-//            achCustomerInfoService.saveAchCustomerInfo(achCustomerInfo);
-//        } catch (Exception e) {
-//            logger.error("Exception when handle consumeAchCustomerInfo:" + e.getMessage());
-//        }
+        try {
+            logger.debug("consumeAchCustomerInfo Consumed Message: "+ kafkaMessage.getTransId());
+            AchCustomerInfo achCustomerInfo = new AchCustomerInfo();
+            String typeTrans = "";
+
+            String orgMsgIso8583 = kafkaMessage.getMessage();
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootIso8583 = objectMapper.readTree(orgMsgIso8583);
+
+            String acctNo = JsonUtil.getVal(rootIso8583, "/body/iso8583/DE103_RCV_ACC_INF").asText();
+            achCustomerInfo.setCdtrAcctNo(acctNo);
+            achCustomerInfo.setCdtrName(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE120_BEN_INF").asText());
+            achCustomerInfo.setCdtrAddress(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE048_ADD_PRV_INF").asText());
+            achCustomerInfo.setCdtrAcctType(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE003_PROC_CD").asText());
+
+            String transCate = JsonUtil.getVal(rootIso8583, "/body/iso8583/DE003_PROC_CD").asText();
+            typeTrans = transCate.substring(4, 6);
+            if (AppConstant.Common.ACCT.equals(typeTrans)) {
+                achCustomerInfo.setCdtrMemId(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE100_BEN_CD").asText());
+            } else if (AppConstant.Common.CARD.equals(typeTrans)) {
+                achCustomerInfo.setCdtrMemId(acctNo.substring(0, 6));
+            }
+
+            achCustomerInfo.setCcy(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE049_TRN_CCY").asText());
+            achCustomerInfo.setDbtrAcctNo(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE102_SND_ACC_INF").asText());
+            achCustomerInfo.setDbtrMemId(JsonUtil.getVal(rootIso8583, "/body/iso8583/DE032_ACQ_CD").asText());
+            achCustomerInfo.setModifiedOn(new Date());
+
+            achCustomerInfoService.saveAchCustomerInfo(achCustomerInfo);
+        } catch (Exception e) {
+            logger.error("Exception when handle consumeAchCustomerInfo:" + e.getMessage());
+        }
     }
 
 //    private DataObj handlePutMxNPResp(RestDataObj restDataObj) {

@@ -1,7 +1,14 @@
 package com.leadon.apigw.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.leadon.apigw.constant.AppConstant;
+import com.leadon.apigw.dto.InquiryTransactionDto;
 import com.leadon.apigw.model.DataObj;
+import com.leadon.apigw.service.InquiryService;
+import com.leadon.apigw.service.KafkaProducerService;
 import com.leadon.apigw.service.NRTService;
+import com.leadon.apigw.util.JsonUtil;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,6 +28,11 @@ public class BankController extends BaseController{
     @Autowired
     private NRTService nrtService;
 
+    @Autowired
+    private KafkaProducerService producer;
+
+    @Autowired
+    private InquiryService inquiryService;
 
     @PutMapping(value = "/cms/iach/91", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DataObj> transfer1(@RequestBody String iso8583Message)
@@ -33,6 +45,16 @@ public class BankController extends BaseController{
         // Return bank client
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+    @PutMapping(value = "/cms/iach/43", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> inquiryDAS(@RequestBody String iso8583Message) {
+        logger.debug("Received inquiry msg from bank client");
+        System.out.println("------------------------------------ IsoString 8583 : " + iso8583Message);
+        //InquiryDto inquiryDto = ISOUtil.convert8583toDas(iso8583);
+        String response = inquiryService.inquiryDAS(iso8583Message);
+        // Return bank client
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @PostMapping(value = "/transfer1", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> transfer(@RequestBody String iso8583Message)
     {

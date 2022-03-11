@@ -333,6 +333,137 @@ public class TransactionRepositoryCustomImpl implements TransactionRepositoryCus
         }
         return res;
     }
+    @Override
+    public DataObj checkInvestgtnInq(String xref, String checkType, String numInqBank, String inqTimeBank,
+                                     String numInqAch, String numDayInq, String inqTime2Ach, String inqTime3Ach) {
+        DataObj res = null;
+        StoredProcedureQuery spQuery = entityManager.createStoredProcedureQuery("PKG_ACH.PR_CHECK_INVESTGTN_INQ")
+                .registerStoredProcedureParameter(1, String.class, ParameterMode.IN)
+                .registerStoredProcedureParameter(2, String.class, ParameterMode.IN)
+                .registerStoredProcedureParameter(3, String.class, ParameterMode.IN)
+                .registerStoredProcedureParameter(4, String.class, ParameterMode.IN)
+                .registerStoredProcedureParameter(5, String.class, ParameterMode.IN)
+                .registerStoredProcedureParameter(6, String.class, ParameterMode.IN)
+                .registerStoredProcedureParameter(7, String.class, ParameterMode.IN)
+                .registerStoredProcedureParameter(8, String.class, ParameterMode.IN)
+                .registerStoredProcedureParameter(9, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(10, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(11, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(12, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(13, String.class, ParameterMode.OUT)
+                .setParameter(1, xref)
+                .setParameter(2, checkType)
+                .setParameter(3, numInqBank)
+                .setParameter(4, inqTimeBank)
+                .setParameter(5, numInqAch)
+                .setParameter(6, numDayInq)
+                .setParameter(7, inqTime2Ach)
+                .setParameter(8, inqTime3Ach);
 
+        try {
+            spQuery.execute();
+            String orgTransId = (String) spQuery.getOutputParameterValue(9);
+            String orgSenderRefId = (String) spQuery.getOutputParameterValue(10);
+            String isCallAch = (String) spQuery.getOutputParameterValue(11);
+            String ecode = (String) spQuery.getOutputParameterValue(12);
+            String edesc = (String) spQuery.getOutputParameterValue(13);
 
+            Map<String, String> map = new HashMap<>();
+            map.put("orgTransId", orgTransId);
+            map.put("orgSenderRefId", orgSenderRefId);
+            map.put("isCallNapas", isCallAch);
+
+            res = new DataObj(ecode, edesc, map);
+
+        } catch (Exception e) {
+            System.out.println("Exception: " + e.toString());
+        } finally {
+            spQuery.unwrap(ProcedureOutputs.class)
+                    .release();
+        }
+        return res;
+    }
+
+    @Override
+    public DataObj getTransById(Long transId) {
+        DataObj res = null;
+        StoredProcedureQuery spQuery = entityManager.createStoredProcedureQuery("PKG_ACH.PR_GET_TRANS_BY_ID")
+                .registerStoredProcedureParameter(1, Long.class, ParameterMode.IN)
+                .registerStoredProcedureParameter(2, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(3, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(4, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(5, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(6, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(7, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(8, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(9, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(10, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(11, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(12, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(13, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(14, String.class, ParameterMode.OUT)
+                .setParameter(1, transId);
+
+        try {
+            spQuery.execute();
+            String isFinalState = (String) spQuery.getOutputParameterValue(2);
+            String dbtrAcctNo = (String) spQuery.getOutputParameterValue(3);
+            String cdtrAcctNo = (String) spQuery.getOutputParameterValue(4);
+            String amount = (String) spQuery.getOutputParameterValue(5);
+            String cdtrMemId = (String) spQuery.getOutputParameterValue(6);
+            String createdOn = (String) spQuery.getOutputParameterValue(7);
+            String orgSenderRefId = (String) spQuery.getOutputParameterValue(8);
+            String transCode = (String) spQuery.getOutputParameterValue(9);
+            String transDesc = (String) spQuery.getOutputParameterValue(10);
+            String transCodeDetail = (String) spQuery.getOutputParameterValue(11);
+            String transDescDetail = (String) spQuery.getOutputParameterValue(12);
+            String ecode = (String) spQuery.getOutputParameterValue(13);
+            String edesc = (String) spQuery.getOutputParameterValue(14);
+
+            Map<String, String> map = new HashMap<>();
+            map.put("isFinalState", isFinalState);
+            map.put("dbtrAcctNo", dbtrAcctNo);
+            map.put("cdtrAcctNo", cdtrAcctNo);
+            map.put("amount", amount);
+            map.put("transCode", transCode);
+            map.put("transDesc", transDesc);
+            map.put("transCodeDetail", transCodeDetail);
+            map.put("transDescDetail", transDescDetail);
+            map.put("cdtrMemId", cdtrMemId);
+            map.put("createdOn", createdOn);
+            map.put("orgSenderRefId", orgSenderRefId);
+
+            res = new DataObj(ecode, edesc, map);
+
+        } catch (Exception e) {
+            System.out.println("Exception: " + e.toString());
+        } finally {
+            spQuery.unwrap(ProcedureOutputs.class)
+                    .release();
+        }
+        return res;
+    }
+    @Override
+    public DataObj updateTransAchDetailStatus(Long transId, String errCode, String errDesc) {
+        DataObj res = null;
+        StoredProcedureQuery spQuery = entityManager.createStoredProcedureQuery("PKG_ACH.PR_UPDATE_TRANS_ACH_DTL_STS")
+                .registerStoredProcedureParameter(1, Long.class, ParameterMode.IN)
+                .registerStoredProcedureParameter(2, String.class, ParameterMode.IN)
+                .registerStoredProcedureParameter(3, String.class, ParameterMode.IN)
+                .setParameter(1, transId)
+                .setParameter(2, errCode)
+                .setParameter(3, errDesc);
+        try {
+            spQuery.execute();
+            res = new DataObj("00", "Updated success", null);
+
+        } catch (Exception e) {
+            System.out.println("Exception: " + e.toString());
+            res = new DataObj("96", "Updated fail", null);
+        } finally {
+            spQuery.unwrap(ProcedureOutputs.class)
+                    .release();
+        }
+        return res;
+    }
 }
