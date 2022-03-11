@@ -36,6 +36,12 @@ public class TransactionRepositoryCustomImpl implements TransactionRepositoryCus
     public DataObj initTrans(Transaction trans, TransAchDetail transAchDetail) {
         return initTrans(trans, transAchDetail, new TransAchActivity(), "2");
     }
+
+    @Override
+    public DataObj initTrans(Transaction trans, TransAchDetail transAchDetail, TransAchActivity transAchActivity) {
+        return initTrans(trans, transAchDetail, transAchActivity, "3");
+    }
+
     @Override
     public DataObj initTrans(Transaction trans, TransAchDetail transAchDetail, TransAchActivity transAchActivity, String initType) {
         DataObj res = null;

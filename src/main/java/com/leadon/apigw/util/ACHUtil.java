@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.leadon.apigw.constant.AppConstant;
+import com.leadon.apigw.model.DAS;
 import com.leadon.apigw.model.TransAchActivity;
 import com.leadon.apigw.model.TransAchDetail;
 import com.leadon.apigw.model.Transaction;
@@ -2965,71 +2966,71 @@ public class ACHUtil {
         return verify;
     }
 
-//    public static DAS buildResponseDasIn(JsonNode jsonNode, String responseCode, String accountHolderName,
-//                                         String authIdResponse) {
-//        DAS das = new DAS();
-//        try {
-////            das.setMsgType((JsonUtil.getVal(jsonNode, "/msgType")) != null
-////                    ? JsonUtil.getVal(jsonNode, "/msgType").asText() : "");
+    public static DAS buildResponseDasIn(JsonNode jsonNode, String responseCode, String accountHolderName,
+                                         String authIdResponse) {
+        DAS das = new DAS();
+        try {
 //            das.setMsgType((JsonUtil.getVal(jsonNode, "/msgType")) != null
-//                    ? AppConstant.InquiryConfig.Das.MSG_TYPE_DAS_RESP : "");
-//            //open when finish test
-//            das.setProcessingCode((JsonUtil.getVal(jsonNode, "/processingCode")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/processingCode").asText() : "");
-//            //end
-//            das.setTransAmount((JsonUtil.getVal(jsonNode, "/transAmount")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/transAmount").asText() : "");
-//            das.setTransmissionDateTime((JsonUtil.getVal(jsonNode, "/transmissionDateTime")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/transmissionDateTime").asText() : "");
-//            das.setSystemTraceAuditNum((JsonUtil.getVal(jsonNode, "/systemTraceAuditNum")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/systemTraceAuditNum").asText() : "");
-//            das.setLocalTime((JsonUtil.getVal(jsonNode, "/localTime")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/localTime").asText() : "");
-//            das.setLocalDate((JsonUtil.getVal(jsonNode, "/localDate")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/localDate").asText() : "");
-//            das.setSettlementDate((JsonUtil.getVal(jsonNode, "/settlementDate")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/settlementDate").asText() : "");
-//            das.setSendingMember((JsonUtil.getVal(jsonNode, "/sendingMember")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/sendingMember").asText() : "");
-//            das.setRetRefNumber((JsonUtil.getVal(jsonNode, "/retRefNumber")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/retRefNumber").asText() : "");
-//            das.setCardAcceptorTerminalId((JsonUtil.getVal(jsonNode, "/cardAcceptorTerminalId")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/cardAcceptorTerminalId").asText() : "");
-////            das.setCardAcceptorId((JsonUtil.getVal(jsonNode, "/cardAcceptorId")) != null
-////                    ? JsonUtil.getVal(jsonNode, "/cardAcceptorId").asText() : "");
-////            das.setCardAcceptorNameLocation((JsonUtil.getVal(jsonNode, "/cardAcceptorNameLocation")) != null
-////                    ? JsonUtil.getVal(jsonNode, "/cardAcceptorNameLocation").asText() : "");
-//            das.setAdditionalDataPrivate((JsonUtil.getVal(jsonNode, "/additionalDataPrivate")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/additionalDataPrivate").asText() : "");
-//            das.setTransCurrencyCode((JsonUtil.getVal(jsonNode, "/transCurrencyCode")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/transCurrencyCode").asText() : "");
-//            das.setUsrDefinedField((JsonUtil.getVal(jsonNode, "/usrDefinedField")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/usrDefinedField").asText() : "");
-//            das.setServiceCode((JsonUtil.getVal(jsonNode, "/serviceCode")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/serviceCode").asText() : "");
-//            das.setTransRefNumber((JsonUtil.getVal(jsonNode, "/transRefNumber")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/transRefNumber").asText() : "");
-//            das.setReceivingMember((JsonUtil.getVal(jsonNode, "/receivingMember")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/receivingMember").asText() : "");
-//            das.setSenderAcc((JsonUtil.getVal(jsonNode, "/senderAcc")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/senderAcc").asText() : "");
-//            das.setReceiverAcc((JsonUtil.getVal(jsonNode, "/receiverAcc")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/receiverAcc").asText() : "");
-//            das.setContentTransfers((JsonUtil.getVal(jsonNode, "/contentTransfers")) != null
-//                    ? JsonUtil.getVal(jsonNode, "/contentTransfers").asText() : "");
-//            das.setPAN((JsonUtil.getVal(jsonNode, "/PAN")) != null ? JsonUtil.getVal(jsonNode, "/PAN").asText() : "");
-//            das.setMAC((JsonUtil.getVal(jsonNode, "/MAC")) != null ? JsonUtil.getVal(jsonNode, "/MAC").asText() : "");
-//            das.setResponseCode(responseCode);
-//
-//            das.setAccountHolderName(accountHolderName);
-//            das.setAuthIdResponse(authIdResponse);
-//        } catch (Exception e) {
-//            logger.error("Exception when handle buildResponseDasIn:" + e.getMessage());
-//            return null;
-//        }
-//        return das;
-//    }
-//
+//                    ? JsonUtil.getVal(jsonNode, "/msgType").asText() : "");
+            das.setMsgType((JsonUtil.getVal(jsonNode, "/msgType")) != null
+                    ? AppConstant.InquiryConfig.Das.MSG_TYPE_DAS_RESP : "");
+            //open when finish test
+            das.setProcessingCode((JsonUtil.getVal(jsonNode, "/processingCode")) != null
+                    ? JsonUtil.getVal(jsonNode, "/processingCode").asText() : "");
+            //end
+            das.setTransAmount((JsonUtil.getVal(jsonNode, "/transAmount")) != null
+                    ? JsonUtil.getVal(jsonNode, "/transAmount").asText() : "");
+            das.setTransmissionDateTime((JsonUtil.getVal(jsonNode, "/transmissionDateTime")) != null
+                    ? JsonUtil.getVal(jsonNode, "/transmissionDateTime").asText() : "");
+            das.setSystemTraceAuditNum((JsonUtil.getVal(jsonNode, "/systemTraceAuditNum")) != null
+                    ? JsonUtil.getVal(jsonNode, "/systemTraceAuditNum").asText() : "");
+            das.setLocalTime((JsonUtil.getVal(jsonNode, "/localTime")) != null
+                    ? JsonUtil.getVal(jsonNode, "/localTime").asText() : "");
+            das.setLocalDate((JsonUtil.getVal(jsonNode, "/localDate")) != null
+                    ? JsonUtil.getVal(jsonNode, "/localDate").asText() : "");
+            das.setSettlementDate((JsonUtil.getVal(jsonNode, "/settlementDate")) != null
+                    ? JsonUtil.getVal(jsonNode, "/settlementDate").asText() : "");
+            das.setSendingMember((JsonUtil.getVal(jsonNode, "/sendingMember")) != null
+                    ? JsonUtil.getVal(jsonNode, "/sendingMember").asText() : "");
+            das.setRetRefNumber((JsonUtil.getVal(jsonNode, "/retRefNumber")) != null
+                    ? JsonUtil.getVal(jsonNode, "/retRefNumber").asText() : "");
+            das.setCardAcceptorTerminalId((JsonUtil.getVal(jsonNode, "/cardAcceptorTerminalId")) != null
+                    ? JsonUtil.getVal(jsonNode, "/cardAcceptorTerminalId").asText() : "");
+//            das.setCardAcceptorId((JsonUtil.getVal(jsonNode, "/cardAcceptorId")) != null
+//                    ? JsonUtil.getVal(jsonNode, "/cardAcceptorId").asText() : "");
+//            das.setCardAcceptorNameLocation((JsonUtil.getVal(jsonNode, "/cardAcceptorNameLocation")) != null
+//                    ? JsonUtil.getVal(jsonNode, "/cardAcceptorNameLocation").asText() : "");
+            das.setAdditionalDataPrivate((JsonUtil.getVal(jsonNode, "/additionalDataPrivate")) != null
+                    ? JsonUtil.getVal(jsonNode, "/additionalDataPrivate").asText() : "");
+            das.setTransCurrencyCode((JsonUtil.getVal(jsonNode, "/transCurrencyCode")) != null
+                    ? JsonUtil.getVal(jsonNode, "/transCurrencyCode").asText() : "");
+            das.setUsrDefinedField((JsonUtil.getVal(jsonNode, "/usrDefinedField")) != null
+                    ? JsonUtil.getVal(jsonNode, "/usrDefinedField").asText() : "");
+            das.setServiceCode((JsonUtil.getVal(jsonNode, "/serviceCode")) != null
+                    ? JsonUtil.getVal(jsonNode, "/serviceCode").asText() : "");
+            das.setTransRefNumber((JsonUtil.getVal(jsonNode, "/transRefNumber")) != null
+                    ? JsonUtil.getVal(jsonNode, "/transRefNumber").asText() : "");
+            das.setReceivingMember((JsonUtil.getVal(jsonNode, "/receivingMember")) != null
+                    ? JsonUtil.getVal(jsonNode, "/receivingMember").asText() : "");
+            das.setSenderAcc((JsonUtil.getVal(jsonNode, "/senderAcc")) != null
+                    ? JsonUtil.getVal(jsonNode, "/senderAcc").asText() : "");
+            das.setReceiverAcc((JsonUtil.getVal(jsonNode, "/receiverAcc")) != null
+                    ? JsonUtil.getVal(jsonNode, "/receiverAcc").asText() : "");
+            das.setContentTransfers((JsonUtil.getVal(jsonNode, "/contentTransfers")) != null
+                    ? JsonUtil.getVal(jsonNode, "/contentTransfers").asText() : "");
+            das.setPAN((JsonUtil.getVal(jsonNode, "/PAN")) != null ? JsonUtil.getVal(jsonNode, "/PAN").asText() : "");
+            das.setMAC((JsonUtil.getVal(jsonNode, "/MAC")) != null ? JsonUtil.getVal(jsonNode, "/MAC").asText() : "");
+            das.setResponseCode(responseCode);
+
+            das.setAccountHolderName(accountHolderName);
+            das.setAuthIdResponse(authIdResponse);
+        } catch (Exception e) {
+            logger.error("Exception when handle buildResponseDasIn:" + e.getMessage());
+            return null;
+        }
+        return das;
+    }
+
 //    public static void buildReqHandleAchMsg(TransAchDetail transAchDetail, TransAchActivity transAchActivity,
 //                                            TransactionDto transactionDto) {
 //        try {
@@ -3070,7 +3071,7 @@ public class ACHUtil {
 //        }
 //
 //    }
-
+//
     /*
     ** investigation
     ** update trans status and detail for pacs028

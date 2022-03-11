@@ -1,13 +1,12 @@
 package com.leadon.apigw.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leadon.apigw.constant.AppConstant;
 import com.leadon.apigw.dto.InquiryTransactionDto;
 import com.leadon.apigw.dto.NPResponse;
 import com.leadon.apigw.dto.RestDataObj;
-import com.leadon.apigw.model.DataObj;
-import com.leadon.apigw.model.TransAchDetail;
-import com.leadon.apigw.model.Transaction;
+import com.leadon.apigw.model.*;
 import com.leadon.apigw.repository.TransAchActivityRepository;
 import com.leadon.apigw.repository.TransMessageISO8583Repository;
 import com.leadon.apigw.repository.TransactionRepository;
@@ -24,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import javax.smartcardio.Card;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -545,127 +545,133 @@ public class InquiryServiceImpl implements InquiryService {
 //                map);
 //    }
 //
-//    @Override
-//    public DAS inquiryDASInComing(String senderId, String senderRefId, String msgContent) {
-//        logger.info(
-//                "Received msg from Napas, senderId: " + senderId + ", senderRefId:" + senderRefId);
-//        logger.debug("message: " + msgContent);
-//
-//        DAS das = new DAS();
-//        JsonNode root = null;
-//        Card card = null;
-////		Account account = null;
-//        String accountHolderName = "";
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        try {
-//            String errorCode = "", errorDesc = "", isCardFlag = "", authIdResponse = "";
-//            root = JsonUtil.toJsonNode(msgContent);
-//            Transaction transaction = new Transaction();
-//            TransAchDetail transAchDetail = new TransAchDetail();
-//            TransAchActivity transAchActivity = new TransAchActivity();
-//            DataObj dataObj = null;
-//            ACHUtil.initTransDasIn(root, transaction, transAchDetail, transAchActivity);
-//
-//            dataObj = new DataObj();
-//            dataObj = transactionRepository.initTrans(transaction, transAchDetail, transAchActivity);
-//            errorCode = dataObj.getEcode();
-//            errorDesc = dataObj.getEdesc();
-//            if (!AppConstant.AchEcode.ECODE_SUCCESS.equals(errorCode)) {
-//                // push log res
-//                producer.pushMsgLogRes(String.valueOf(transaction.getTransId()), objectMapper.writeValueAsString(das),
-//                        AppConstant.ChannelId.ACH, AppConstant.LogConfig.BANK, AppConstant.LogConfig.CATEGORY_NAPAS);
-//                das = ACHUtil.buildResponseDasIn(root, errorCode, accountHolderName, "000000");
-//                return das;
-//            }
-//            // push log request
-//            producer.pushMsgLogReq(String.valueOf(transaction.getTransId()), msgContent, AppConstant.ChannelId.ACH,
-//                    AppConstant.LogConfig.BANK, AppConstant.LogConfig.CATEGORY_NAPAS);
-//
-//            if (JsonUtil.getVal(root, "/processingCode").asText().substring(4).equals(AppConstant.Common.CARD)) {
-//                isCardFlag = AppConstant.Common.IS_CARD_FLAG;
-////                if (JsonUtil.getVal(root, "/receiverAcc").asText().length() != Integer
-////                        .parseInt(AppConstant.Common.CARD_LENGTH)) {
-////                    errorCode = "44";
-////                    errorDesc = "Card invalid";
-////                }
-////                if (!JsonUtil.getVal(root, "/receiverAcc").asText().startsWith(AppConstant.Common.SENDER_ID)) {
-////                    errorCode = "44";
-////                    errorDesc = "Card invalid";
-////                }
-//            } else if (JsonUtil.getVal(root, "/processingCode").asText().substring(4).equals(AppConstant.Common.ACCT)) {
-//                isCardFlag = AppConstant.Common.IS_ACCT_FLAG;
-//                if (!ACHUtil.validateAccount(JsonUtil.getVal(root, "/receiverAcc").asText())) {
-//                    errorCode = "38";
-//                    errorDesc = "Account invalid";
+    @Override
+    public DAS inquiryDASInComing(String senderId, String senderRefId, String msgContent) {
+        logger.info(
+                "Received msg from Napas, senderId: " + senderId + ", senderRefId:" + senderRefId);
+        logger.debug("message: " + msgContent);
+
+        DAS das = new DAS();
+        JsonNode root = null;
+        Card card = null;
+//		Account account = null;
+        String accountHolderName = "";
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            String errorCode = "", errorDesc = "", isCardFlag = "", authIdResponse = "";
+            root = JsonUtil.toJsonNode(msgContent);
+            Transaction transaction = new Transaction();
+            TransAchDetail transAchDetail = new TransAchDetail();
+            TransAchActivity transAchActivity = new TransAchActivity();
+            DataObj dataObj = null;
+            ACHUtil.initTransDasIn(root, transaction, transAchDetail, transAchActivity);
+
+            dataObj = new DataObj();
+            dataObj = transactionRepository.initTrans(transaction, transAchDetail, transAchActivity);
+            errorCode = dataObj.getEcode();
+            errorDesc = dataObj.getEdesc();
+            if (!AppConstant.AchEcode.ECODE_SUCCESS.equals(errorCode)) {
+                // push log res
+                producer.pushMsgLogRes(String.valueOf(transaction.getTransId()), objectMapper.writeValueAsString(das),
+                        AppConstant.ChannelId.ACH, AppConstant.LogConfig.BANK, AppConstant.LogConfig.CATEGORY_NAPAS);
+                das = ACHUtil.buildResponseDasIn(root, errorCode, accountHolderName, "000000");
+                return das;
+            }
+            // push log request
+            producer.pushMsgLogReq(String.valueOf(transaction.getTransId()), msgContent, AppConstant.ChannelId.ACH,
+                    AppConstant.LogConfig.BANK, AppConstant.LogConfig.CATEGORY_NAPAS);
+
+            if (JsonUtil.getVal(root, "/processingCode").asText().substring(4).equals(AppConstant.Common.CARD)) {
+                isCardFlag = AppConstant.Common.IS_CARD_FLAG;
+//                if (JsonUtil.getVal(root, "/receiverAcc").asText().length() != Integer
+//                        .parseInt(AppConstant.Common.CARD_LENGTH)) {
+//                    errorCode = "44";
+//                    errorDesc = "Card invalid";
 //                }
-//            }
-//
-//            if (!AppConstant.SystemResponse.SUCCESS_CODE.equals(errorCode)) {
-//                // push log res
-//                producer.pushMsgLogRes(String.valueOf(transaction.getTransId()), objectMapper.writeValueAsString(das),
-//                        AppConstant.ChannelId.ACH, AppConstant.LogConfig.BANK, AppConstant.LogConfig.CATEGORY_NAPAS);
-//                das = ACHUtil.buildResponseDasIn(root, errorCode, accountHolderName, "000000");
-//                return das;
-//            }
-//
-//            String iso8583Message = MsgBuilder.buildISO8583Das(msgContent, "");
-//            logger.info("+++bulding Iso583Message: " + iso8583Message);
-//
-//            // Push iso8583 message
-//            producer.pushIso8583Message(String.valueOf(transaction.getTransId()),  senderRefId, iso8583Message, iso8583Message, AppConstant.LogConfig.REQUEST, AppConstant.LogConfig.NAPAS, AppConstant.LogConfig.BANK,
-//                    AppConstant.LogConfig.CATEGORY_EXTERNAL);
-//
-//            // call to bank
-////            if (AppConstant.Common.IS_CARD_FLAG.equals(isCardFlag)) {
-////                card = new Card();
-////                card = BankCaller.inquiryCardDetail(root, errorCode, errorDesc);
-////                accountHolderName = card.getAcctName();
-////            } else if (AppConstant.Common.IS_ACCT_FLAG.equals(isCardFlag)) {
-//            RestDataObj accountDas = BankCaller.send2Bank(iso8583Message, AppConstant.MsgIdr.DAS);
-//                if (accountDas !=  null && !StringUtils.isEmpty(accountDas.getResponse())) {
-//                    String msgIso8583 = accountDas.getResponse();
-//                    // Push iso8583 message
-//                    producer.pushIso8583Message(String.valueOf(transaction.getTransId()),  senderRefId, msgIso8583, msgIso8583, AppConstant.LogConfig.RESPONSE, AppConstant.LogConfig.COREBANKING, AppConstant.LogConfig.NAPAS,
-//                            AppConstant.LogConfig.CATEGORY_INTERNAL);
-//
-//                    JsonNode rootDas = objectMapper.readTree(msgIso8583);
-//                    errorCode = JsonUtil.getVal(rootDas, "/body/iso8583/DE039_RES_CD").asText();
-//                    authIdResponse = JsonUtil.getVal(rootDas, "/body/iso8583/DE038_AUTH_ID_RES").asText();
-//                    accountHolderName = JsonUtil.getVal(rootDas, "/body/iso8583/DE120_BEN_INF").asText();
-//                } else {
-//                    errorCode = AppConstant.SystemResponse.TIMEOUT_ERROR_CODE;
+//                if (!JsonUtil.getVal(root, "/receiverAcc").asText().startsWith(AppConstant.Common.SENDER_ID)) {
+//                    errorCode = "44";
+//                    errorDesc = "Card invalid";
 //                }
-////            }
-//
-//            if (AppConstant.SystemResponse.SUCCESS_CODE.equals(errorCode)) {
-//                das = ACHUtil.buildResponseDasIn(root, errorCode, accountHolderName, authIdResponse);
-//            } else {
-//                if (!AppConstant.SystemResponse.SYSTEM_ERROR_CODE.equals(errorCode)
-//                        && !AppConstant.SystemResponse.TIMEOUT_ERROR_CODE.equals(errorCode)) {
-//                    if (AppConstant.Common.IS_CARD_FLAG.equals(isCardFlag)) {
-//                        errorCode = AppConstant.InquiryConfig.Das.DAS_ERROR_CODE_CARD;
-//                    } else if (AppConstant.Common.IS_ACCT_FLAG.equals(isCardFlag)) {
-//                        errorCode = AppConstant.InquiryConfig.Das.DAS_ERROR_CODE_ACCT;
-//                    }
-//                }
-//                das = ACHUtil.buildResponseDasIn(root, errorCode, accountHolderName, "000000");
+            } else if (JsonUtil.getVal(root, "/processingCode").asText().substring(4).equals(AppConstant.Common.ACCT)) {
+                isCardFlag = AppConstant.Common.IS_ACCT_FLAG;
+                if (!ACHUtil.validateAccount(JsonUtil.getVal(root, "/receiverAcc").asText())) {
+                    errorCode = "38";
+                    errorDesc = "Account invalid";
+                }
+            }
+
+            if (!AppConstant.SystemResponse.SUCCESS_CODE.equals(errorCode)) {
+                // push log res
+                producer.pushMsgLogRes(String.valueOf(transaction.getTransId()), objectMapper.writeValueAsString(das),
+                        AppConstant.ChannelId.ACH, AppConstant.LogConfig.BANK, AppConstant.LogConfig.CATEGORY_NAPAS);
+                das = ACHUtil.buildResponseDasIn(root, errorCode, accountHolderName, "000000");
+                return das;
+            }
+
+            String iso8583Message = MsgBuilder.buildISO8583Das(msgContent, "");
+            logger.info("+++bulding Iso583Message: " + iso8583Message);
+
+            // Push iso8583 message
+            producer.pushIso8583Message(String.valueOf(transaction.getTransId()),  senderRefId, iso8583Message, iso8583Message, AppConstant.LogConfig.REQUEST, AppConstant.LogConfig.NAPAS, AppConstant.LogConfig.BANK,
+                    AppConstant.LogConfig.CATEGORY_EXTERNAL);
+
+            // call to bank
+//            if (AppConstant.Common.IS_CARD_FLAG.equals(isCardFlag)) {
+//                card = new Card();
+//                card = BankCaller.inquiryCardDetail(root, errorCode, errorDesc);
+//                accountHolderName = card.getAcctName();
+//            } else if (AppConstant.Common.IS_ACCT_FLAG.equals(isCardFlag)) {
+
+            //TODO RestDataObj accountDas = BankCaller.send2Bank(iso8583Message, AppConstant.MsgIdr.DAS);
+            //Simulation response from bank start
+            RestDataObj accountDas = new RestDataObj();
+            accountDas.setHttpStatus("200");
+            accountDas.setResponse("{\"body\":{\"iso8583\":{\"MTI\":\"0210\",\"DE002_PAN\":\"0000000000000\",\"DE003_PROC_CD\":\"432020\",\"DE004_TRN_AMT\":\"000000000000\",\"DE007_TRN_DT\":\"0308172359\",\"DE011_TRACE_NO\":\"452888\",\"DE012_LOC_TRN_TIME\":\"002359\",\"DE013_LOC_TRN_DATE\":\"0309\",\"DE015_STL_DATE\":\"0309\",\"DE032_ACQ_CD\":\"686868\",\"DE037_REL_REF_NO\":\"035536002359\",\"DE038_AUTH_ID_RES\":\"346810\",\"DE039_RES_CD\":\"00\",\"DE041_CRD_ACPT_TRM\":\"20191111\",\"DE048_ADD_PRV_INF\":\"VCB HO\\r198 Tran Quang Khai, Ha Noi\",\"DE049_TRN_CCY\":\"704\",\"DE062_NAP_SVC_CD\":\"IF_INQ\",\"DE063_TRN_REF_NO\":\"4037689546490790\",\"DE100_BEN_CD\":\"970457\",\"DE102_SND_ACC_INF\":\"0000000000000\",\"DE103_RCV_ACC_INF\":\"902007616497\",\"DE104_TRN_CONT\":\"Chuyen tien NH - INQ c2c\",\"DE120_BEN_INF\":\"SOHAGAME 0922065032\",\"DE128_MAC_DAT\":\"4D7A62F27BB3F772\"}}}");
+            //Simulation response from bank end
+                if (accountDas !=  null && !StringUtils.isEmpty(accountDas.getResponse())) {
+                    String msgIso8583 = accountDas.getResponse();
+                    // Push iso8583 message
+                    producer.pushIso8583Message(String.valueOf(transaction.getTransId()),  senderRefId, msgIso8583, msgIso8583, AppConstant.LogConfig.RESPONSE, AppConstant.LogConfig.COREBANKING, AppConstant.LogConfig.NAPAS,
+                            AppConstant.LogConfig.CATEGORY_INTERNAL);
+
+                    JsonNode rootDas = objectMapper.readTree(msgIso8583);
+                    errorCode = JsonUtil.getVal(rootDas, "/body/iso8583/DE039_RES_CD").asText();
+                    authIdResponse = JsonUtil.getVal(rootDas, "/body/iso8583/DE038_AUTH_ID_RES").asText();
+                    accountHolderName = JsonUtil.getVal(rootDas, "/body/iso8583/DE120_BEN_INF").asText();
+                } else {
+                    errorCode = AppConstant.SystemResponse.TIMEOUT_ERROR_CODE;
+                }
 //            }
-//
-//            transactionRepository.updateTransStatus(transaction.getTransId(), errorCode, errorDesc);
-//            transactionRepository.updateTransAchDetailStatus(transaction.getTransId(), errorCode, errorDesc);
-//
-//            // push log res
-//            producer.pushMsgLogRes(String.valueOf(transaction.getTransId()), objectMapper.writeValueAsString(das),
-//                    AppConstant.ChannelId.ACH, AppConstant.LogConfig.BANK, AppConstant.LogConfig.CATEGORY_NAPAS);
-//        } catch (Exception e) {
-//            logger.error("Exception when handle inquiryDASInComing:" + e.getMessage());
-//            das = ACHUtil.buildResponseDasIn(root, AppConstant.AchEcode.ECODE_SYSTEM_ERROR, accountHolderName,
-//                    "000000");
-//        }
-//        logger.info("-------------- sending to napas:: " + das.toString());
-//        return das;
-//    }
-//
+
+            if (AppConstant.SystemResponse.SUCCESS_CODE.equals(errorCode)) {
+                das = ACHUtil.buildResponseDasIn(root, errorCode, accountHolderName, authIdResponse);
+            } else {
+                if (!AppConstant.SystemResponse.SYSTEM_ERROR_CODE.equals(errorCode)
+                        && !AppConstant.SystemResponse.TIMEOUT_ERROR_CODE.equals(errorCode)) {
+                    if (AppConstant.Common.IS_CARD_FLAG.equals(isCardFlag)) {
+                        errorCode = AppConstant.InquiryConfig.Das.DAS_ERROR_CODE_CARD;
+                    } else if (AppConstant.Common.IS_ACCT_FLAG.equals(isCardFlag)) {
+                        errorCode = AppConstant.InquiryConfig.Das.DAS_ERROR_CODE_ACCT;
+                    }
+                }
+                das = ACHUtil.buildResponseDasIn(root, errorCode, accountHolderName, "000000");
+            }
+
+            transactionRepository.updateTransStatus(transaction.getTransId(), errorCode, errorDesc);
+            transactionRepository.updateTransAchDetailStatus(transaction.getTransId(), errorCode, errorDesc);
+
+            // push log res
+            producer.pushMsgLogRes(String.valueOf(transaction.getTransId()), objectMapper.writeValueAsString(das),
+                    AppConstant.ChannelId.ACH, AppConstant.LogConfig.BANK, AppConstant.LogConfig.CATEGORY_NAPAS);
+        } catch (Exception e) {
+            logger.error("Exception when handle inquiryDASInComing:" + e.getMessage());
+            das = ACHUtil.buildResponseDasIn(root, AppConstant.AchEcode.ECODE_SYSTEM_ERROR, accountHolderName,
+                    "000000");
+        }
+        logger.info("-------------- sending to napas:: " + das.toString());
+        return das;
+    }
+
     private DataObj handleDasOutNPResp(RestDataObj restDataObj) {
         DataObj dataObj = new DataObj();
         try {
