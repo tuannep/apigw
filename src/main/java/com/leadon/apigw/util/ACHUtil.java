@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.leadon.apigw.constant.AppConstant;
+import com.leadon.apigw.dto.TransactionDto;
 import com.leadon.apigw.model.DAS;
 import com.leadon.apigw.model.TransAchActivity;
 import com.leadon.apigw.model.TransAchDetail;
@@ -3031,47 +3032,47 @@ public class ACHUtil {
         return das;
     }
 
-//    public static void buildReqHandleAchMsg(TransAchDetail transAchDetail, TransAchActivity transAchActivity,
-//                                            TransactionDto transactionDto) {
-//        try {
-//            transAchDetail.setTransId(transactionDto.getTransId());
-//            transAchDetail.setSenderRefId(transactionDto.getSenderRefId());
-//            transAchDetail.setMsgIdentifier(transactionDto.getMessageIdentifier());
-//            transAchActivity.setActivityDesc(transactionDto.getTransDesc());
-//            transAchActivity.setMsgType(transactionDto.getMsgType());
-//            transAchActivity.setMsgContent(transactionDto.getMsgContent());
-//            transAchActivity.setSenderRefId(transactionDto.getSenderRefId());
-//
-//            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//            transAchActivity.setMsgDt(DateUtil.parseTimestampXXX2Date(transactionDto.getMsgDt()));
-//            transAchDetail.setErrCode(transactionDto.getErrorCode());
-//            transAchDetail.setErrDesc(transactionDto.getErrorDesc());
-//            transAchDetail.setOrgTransId(transactionDto.getOrgTransId());
-//            transAchDetail.setOrgSenderRefId(transactionDto.getOrgSenderRefId());
-//            transAchDetail.setRefSenderRefId(transactionDto.getRefSenderRefId());
-//            transAchDetail.setVatAmount((transactionDto.getVatAmount() != null)
-//                    ? BigDecimal.valueOf(Long.parseLong(transactionDto.getVatAmount())) : BigDecimal.valueOf(0));
-//            transAchDetail.setFeeAmount((transactionDto.getFeeAmount() != null)
-//                    ? BigDecimal.valueOf(Long.parseLong(transactionDto.getFeeAmount())) : BigDecimal.valueOf(0));
-//            transAchDetail.setSettleDt(
-//                    (transactionDto.getSettleDt() == null ? null : sdf.parse(transactionDto.getSettleDt())));
-//            transAchDetail.setInstrId(transactionDto.getInstrId());
-//            transAchDetail.setEndtoendId(transactionDto.getEndtoendId());
-//            transAchDetail.setTxId(transactionDto.getTxId());
-//            transAchDetail.setChargeBr(transactionDto.getChargeBr());
-//            transAchDetail.setCdtrBrn(transactionDto.getCdtrBrn());
-//            transAchDetail.setTransStep(transactionDto.getTransStep());
-//            transAchDetail.setTransStepStat(transactionDto.getTransStepStat());
-//            transAchDetail.setTrnRefNo(transactionDto.getTrnRefNo());
-//            transAchDetail.setGroupStatus(transactionDto.getGroupStatus());
-//            transAchDetail.setSessionNo(transactionDto.getSessionNo());
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            logger.error("Exception when handle buildReqHandleAchMsg:" + e.getMessage());
-//        }
-//
-//    }
-//
+    public static void buildReqHandleAchMsg(TransAchDetail transAchDetail, TransAchActivity transAchActivity,
+                                            TransactionDto transactionDto) {
+        try {
+            transAchDetail.setTransId(transactionDto.getTransId());
+            transAchDetail.setSenderRefId(transactionDto.getSenderRefId());
+            transAchDetail.setMsgIdentifier(transactionDto.getMessageIdentifier());
+            transAchActivity.setActivityDesc(transactionDto.getTransDesc());
+            transAchActivity.setMsgType(transactionDto.getMsgType());
+            transAchActivity.setMsgContent(transactionDto.getMsgContent());
+            transAchActivity.setSenderRefId(transactionDto.getSenderRefId());
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            transAchActivity.setMsgDt(DateUtil.parseTimestampXXX2Date(transactionDto.getMsgDt()));
+            transAchDetail.setErrCode(transactionDto.getErrorCode());
+            transAchDetail.setErrDesc(transactionDto.getErrorDesc());
+            transAchDetail.setOrgTransId(transactionDto.getOrgTransId());
+            transAchDetail.setOrgSenderRefId(transactionDto.getOrgSenderRefId());
+            transAchDetail.setRefSenderRefId(transactionDto.getRefSenderRefId());
+            transAchDetail.setVatAmount((transactionDto.getVatAmount() != null)
+                    ? BigDecimal.valueOf(Long.parseLong(transactionDto.getVatAmount())) : BigDecimal.valueOf(0));
+            transAchDetail.setFeeAmount((transactionDto.getFeeAmount() != null)
+                    ? BigDecimal.valueOf(Long.parseLong(transactionDto.getFeeAmount())) : BigDecimal.valueOf(0));
+            transAchDetail.setSettleDt(
+                    (transactionDto.getSettleDt() == null ? null : sdf.parse(transactionDto.getSettleDt())));
+            transAchDetail.setInstrId(transactionDto.getInstrId());
+            transAchDetail.setEndtoendId(transactionDto.getEndtoendId());
+            transAchDetail.setTxId(transactionDto.getTxId());
+            transAchDetail.setChargeBr(transactionDto.getChargeBr());
+            transAchDetail.setCdtrBrn(transactionDto.getCdtrBrn());
+            transAchDetail.setTransStep(transactionDto.getTransStep());
+            transAchDetail.setTransStepStat(transactionDto.getTransStepStat());
+            transAchDetail.setTrnRefNo(transactionDto.getTrnRefNo());
+            transAchDetail.setGroupStatus(transactionDto.getGroupStatus());
+            transAchDetail.setSessionNo(transactionDto.getSessionNo());
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("Exception when handle buildReqHandleAchMsg:" + e.getMessage());
+        }
+
+    }
+
     /*
     ** investigation
     ** update trans status and detail for pacs028

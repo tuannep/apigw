@@ -27,6 +27,9 @@ public class TransactionRepositoryCustomImpl implements TransactionRepositoryCus
     @PersistenceContext
     private EntityManager entityManager;
 
+    @Autowired
+    private TransactionRepository transactionRepository;
+
     @Override
     public DataObj initTrans(Transaction trans) {
         return initTrans(trans, new TransAchDetail(), new TransAchActivity(), "1");
@@ -472,4 +475,116 @@ public class TransactionRepositoryCustomImpl implements TransactionRepositoryCus
         }
         return res;
     }
+    @Override
+    public DataObj getTransBySenderRef(String senderRefId) {
+        DataObj res = null;
+        StoredProcedureQuery spQuery = entityManager.createStoredProcedureQuery("PKG_ACH.PR_GET_TRANS_BY_SENDERREF")
+                .registerStoredProcedureParameter(1, String.class, ParameterMode.IN)
+                .registerStoredProcedureParameter(2, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(3, Long.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(4, Long.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(5, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(6, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(7, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(8, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(9, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(10, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(11, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(12, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(13, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(14, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(15, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(16, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(17, String.class, ParameterMode.OUT)
+                .registerStoredProcedureParameter(18, String.class, ParameterMode.OUT).setParameter(1, senderRefId);
+        try {
+            spQuery.execute();
+            String ecode = (String) spQuery.getOutputParameterValue(17);
+            String edesc = (String) spQuery.getOutputParameterValue(18);
+            Map<String, String> map = null;
+            if ("00".equals(ecode)) {
+                String transInOut = (String) spQuery.getOutputParameterValue(2);
+                String transId = String.valueOf(spQuery.getOutputParameterValue(3));
+                String orgTransId = String.valueOf(spQuery.getOutputParameterValue(4));
+                String dbtrBrn = (String) spQuery.getOutputParameterValue(5);
+                String trnRefNo = (String) spQuery.getOutputParameterValue(6);
+                String transType = (String) spQuery.getOutputParameterValue(7);
+                String transCate = (String) spQuery.getOutputParameterValue(8);
+                String channelId = (String) spQuery.getOutputParameterValue(9);
+                String xrefId = (String) spQuery.getOutputParameterValue(10);
+                String dbtrAcctNo = (String) spQuery.getOutputParameterValue(11);
+                String cdtrAcctNo = (String) spQuery.getOutputParameterValue(12);
+                String amount = (String) spQuery.getOutputParameterValue(13);
+                String ccy = (String) spQuery.getOutputParameterValue(14);
+                String createdOn = (String) spQuery.getOutputParameterValue(15);
+                String orgSenderRefId = (String) spQuery.getOutputParameterValue(16);
+
+                map = new HashMap<>();
+                map.put("transInOut", transInOut);
+                map.put("transId", transId);
+                map.put("orgTransId", orgTransId);
+                map.put("dbtrBrn", dbtrBrn);
+                map.put("trnRefNo", trnRefNo);
+                map.put("transType", transType);
+                map.put("transCate", transCate);
+                map.put("channelId", channelId);
+                map.put("xrefId", xrefId);
+                map.put("dbtrAcctNo", dbtrAcctNo);
+                map.put("cdtrAcctNo", cdtrAcctNo);
+                map.put("amount", amount);
+                map.put("ccy", ccy);
+                map.put("createdOn", createdOn);
+                map.put("orgSenderRefId", orgSenderRefId);
+            }
+
+            res = new DataObj(ecode, edesc, map);
+        } catch (Exception e) {
+            logger.error("Exception when handle getTransBySenderRef:" + e.getMessage());
+            System.out.println("Exception: " + e.toString());
+            res = new DataObj("96", "Fail", null);
+        } finally {
+            spQuery.unwrap(ProcedureOutputs.class).release();
+        }
+        return res;
+    }
+    @Override
+    public DataObj updateTransStatusUpdated(Long transId, String transStat, String transStatDesc) {
+        DataObj res = null;
+        StoredProcedureQuery spQuery = entityManager.createStoredProcedureQuery("PKG_ACH.PR_UPDATE_TRANS_STS_NP")
+                .registerStoredProcedureParameter(1, Long.class, ParameterMode.IN)
+                .registerStoredProcedureParameter(2, String.class, ParameterMode.IN)
+                .registerStoredProcedureParameter(3, String.class, ParameterMode.IN)
+                .setParameter(1, transId)
+                .setParameter(2, transStat)
+                .setParameter(3, transStatDesc);
+        try {
+            spQuery.execute();
+            res = new DataObj("00", "Updated success", null);
+
+        } catch (Exception e) {
+            System.out.println("Exception: " + e.toString());
+            res = new DataObj("96", "Updated fail", null);
+        } finally {
+            spQuery.unwrap(ProcedureOutputs.class)
+                    .release();
+        }
+        return res;
+    }
+
+    @Override
+    public void updateTransactionStatusJpa(Long transId, String transStat, String transStatDesc) {
+        Optional<Transaction> optional = transactionRepository.findById(transId);
+
+        if (!optional.isPresent()) {
+            logger.error("Can't find transId {} , data may be damaged or deleted", transId);
+            return;
+        }
+
+        Transaction transaction = optional.get();
+        transaction.setTransStat(transStat);
+        transaction.setTransStatDesc(transStatDesc);
+
+        transactionRepository.save(transaction);
+    }
+
 }

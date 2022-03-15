@@ -18,4 +18,7 @@ public interface TransactionRepositoryCustom {
                                      String numInqAch, String numDayInq, String inqTime2Ach, String inqTime3Ach);
     public DataObj getTransById(Long transId);
     public DataObj updateTransAchDetailStatus(Long transId, String errCode, String errDesc);
+    public DataObj getTransBySenderRef(String senderRefId);
+    public DataObj updateTransStatusUpdated(Long transId, String transStat, String transStatDesc);
+    public void updateTransactionStatusJpa(Long transId, String transStat, String transStatDesc);
 }

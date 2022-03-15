@@ -2308,177 +2308,177 @@ public class MsgBuilder {
 //        //DE104_TRN_CONT
 //        JsonUtil.setVal(root, "/body/iso8583/DE104_TRN_CONT", CTR);
 //    }
-//
-//	public static String buildISO8583NRTNAK(String message, String err_code, String authIdRes) {
-//		try {
-//			ObjectMapper objectMapper = new ObjectMapper();
-//			JsonNode rootPacs008 = objectMapper.readTree(message);
-//
-//			JsonUtil.setVal(rootPacs008, "/body/iso8583/MTI", "0210");
-//			JsonUtil.setVal(rootPacs008, "/body/iso8583/DE039_RES_CD", err_code);
-//
-//			if(!StringUtils.isEmpty(authIdRes))
-//				JsonUtil.setVal(rootPacs008, "/body/iso8583/DE038_AUTH_ID_RES", ACHUtil.subStringbyIndex(authIdRes, 6));
-//
-//			return rootPacs008.toPrettyString();
-//		} catch (Exception e) {
-//			logger.error("Exception when handle buildISO8583NRTNAK:" + e.getMessage());
-//			return "";
-//		}
-//	}
-//
-//	public static String buildISO8583Investigation(String message, String orgMessage, String err_code, String authIdRes, String errException) {
-//		try {
-//			ObjectMapper objectMapper = new ObjectMapper();
-//			JsonNode rootPacs008 = objectMapper.readTree(message);
-//
-//			JsonUtil.setVal(rootPacs008, "/body/iso8583/MTI", "0210");
-//			JsonUtil.setVal(rootPacs008, "/body/iso8583/DE039_RES_CD", "00");
-//			if (StringUtils.isNotEmpty(orgMessage)) {
-//				JsonNode rootOrgMessage = objectMapper.readTree(orgMessage);
-////				#Add 48: 13 for Original Trx(4Bytes)+ #41 for Original Trx(8Bytes) + #39 forOriginal Trx(2 Bytes)
-//				String orgDe013 = ACHUtil.subStringbyIndex(JsonUtil.getVal(rootOrgMessage, "/body/iso8583/DE013_LOC_TRN_DATE").asText(), 4);
-//				String orgDe041 = ACHUtil.subStringbyIndex(JsonUtil.getVal(rootOrgMessage, "/body/iso8583/DE041_CRD_ACPT_TRM").asText(), 8);
-//				if ("12".equals(err_code)) {
-//				    String investDe048 = JsonUtil.getVal(rootPacs008, "/body/iso8583/DE048_ADD_PRV_INF").asText() + err_code;
-//                    JsonUtil.setVal(rootPacs008, "/body/iso8583/DE048_ADD_PRV_INF", investDe048);
-//                }
-//				else {
-////                    String orgDe039 = ACHUtil.subStringbyIndex(JsonUtil.getVal(rootOrgMessage, "/body/iso8583/DE039_RES_CD").asText(), 2);
-//                    JsonUtil.setVal(rootPacs008, "/body/iso8583/DE048_ADD_PRV_INF", orgDe013 + orgDe041 + err_code);
-//                }
-////				JsonUtil.setVal(rootPacs008, "/body/iso8583/DE012_LOC_TRN_TIME", JsonUtil.getVal(rootOrgMessage, "/body/iso8583/DE012_LOC_TRN_TIME").asText());
-////				JsonUtil.setVal(rootPacs008, "/body/iso8583/DE013_LOC_TRN_DATE", JsonUtil.getVal(rootOrgMessage, "/body/iso8583/DE013_LOC_TRN_DATE").asText());
-//			}
-//            if (AppConstant.SystemResponse.SYSTEM_ERROR_EXCEPTION_CODE.equals(errException)) {
-//                JsonUtil.setVal(rootPacs008, "/body/iso8583/DE039_RES_CD", errException);
-//            }
-//            //remove 22,25,42,43
-//			JsonUtil.remove(rootPacs008, "/body/iso8583/DE022_POS_MODE");
-//			JsonUtil.remove(rootPacs008, "/body/iso8583/DE025_POS_COND_CD");
-//			JsonUtil.remove(rootPacs008, "/body/iso8583/DE042_CRD_ACPT_ID");
-//			JsonUtil.remove(rootPacs008, "/body/iso8583/DE043_CRD_ACPT_LOC");
-//
-//			if(!StringUtils.isEmpty(authIdRes))
-//				JsonUtil.setVal(rootPacs008, "/body/iso8583/DE038_AUTH_ID_RES", ACHUtil.subStringbyIndex(authIdRes, 6));
-//
-//			return rootPacs008.toPrettyString();
-//		} catch (Exception e) {
-//			logger.error("Exception when handle buildISO8583Investigation:" + e.getMessage());
-//			return "";
-//		}
-//	}
-//
-//	public static String buildISO8583PACS004(String messagePacs004, String orgMessageIso8583, String dbtrMemCode) {
-//		try {
-//			JsonNode root = ISO8583JSON.deepCopy();
-//			ObjectMapper objectMapper = new ObjectMapper();
-//			JsonNode rootPacs004 = objectMapper.readTree(messagePacs004);
-//			JsonNode orgMessage = objectMapper.readTree(orgMessageIso8583);
-//
-//			String senderRefId = JsonUtil.getVal(rootPacs004, "/Header/SenderReference").asText();
-//			String fromAcc = JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/TxInf/0/OrgnlTxRef/CdtrAcct/Id/Othr/Id").asText();
-//
-//			JsonUtil.setVal(root, "/body/iso8583/MTI",
-//					"0200");
-//			JsonUtil.setVal(root, "/body/iso8583/DE002_PAN", fromAcc);
-//			JsonUtil.setVal(root, "/body/iso8583/DE003_PROC_CD",
-//					getProcessCode(JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/TxInf/0/OrgnlTxRef/DbtrAcct/Tp/Prtry").asText(),
-//							JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/TxInf/0/OrgnlTxRef/CdtrAcct/Tp/Prtry").asText()));
-////					JsonUtil.getVal(rootPacs008, "Document/PmtRtr/TxInf/OrgnlInstrId").asText().substring(0, 6));
-//			JsonUtil.setVal(root, "/body/iso8583/DE004_TRN_AMT",
-//					ACHUtil.getAmount(JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/TxInf/0/RtrdIntrBkSttlmAmt/Value").asText()));
-//			JsonUtil.setVal(root, "/body/iso8583/DE005_STL_AMT",
-//					ACHUtil.getAmount(JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/TxInf/0/RtrdIntrBkSttlmAmt/Value").asText()));
-//			JsonUtil.setVal(root, "/body/iso8583/DE007_TRN_DT",
-//					DateUtil.formatMMddHHmmss(DateUtil.parseTimestampZ2Date(JsonUtil.getVal(rootPacs004, "/Payload/AppHdr/CreDt").asText())));
-//			JsonUtil.setVal(root, "/body/iso8583/DE009_STL_CONV_RT",
-//					"00000001");
-//			JsonUtil.setVal(root, "/body/iso8583/DE011_TRACE_NO",
-//					ACHUtil.subStringbyIndex(senderRefId.substring(senderRefId.length() - 6), 6));
-//			String MMddHHmmss = DateUtil.formatMMddHHmmss(DateUtil.parseTimestampXXX2Date(JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/GrpHdr/CreDtTm").asText()));
-//			JsonUtil.setVal(root, "/body/iso8583/DE012_LOC_TRN_TIME",
-//					MMddHHmmss.substring(4));
-//			JsonUtil.setVal(root, "/body/iso8583/DE013_LOC_TRN_DATE",
-//					MMddHHmmss.substring(0, 4));
-//			// handle optional IntrBkSttlmDt
-//			String intrBkSttlmDt = JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/GrpHdr/IntrBkSttlmDt").asText();
-//			if (StringUtils.isNotEmpty(intrBkSttlmDt)) {
-//				JsonUtil.setVal(root, "/body/iso8583/DE015_STL_DATE",
-//						intrBkSttlmDt.substring(5).replace("-", ""));
-//			} else {
-//				intrBkSttlmDt = JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/TxInf/0/IntrBkSttlmDt").asText();
-//				JsonUtil.setVal(root, "/body/iso8583/DE015_STL_DATE",
-//						StringUtils.isEmpty(intrBkSttlmDt) ? MMddHHmmss.substring(0, 4) : intrBkSttlmDt.substring(5).replace("-", ""));
-//			}
-//			JsonUtil.setVal(root, "/body/iso8583/DE019_ACQ_CTRY_CD",
-//					"704");
-//			JsonUtil.setVal(root, "/body/iso8583/DE022_POS_MODE",
-//					"000");
-//			JsonUtil.setVal(root, "/body/iso8583/DE025_POS_COND_CD",
-//					"00");
-//			JsonUtil.setVal(root, "/body/iso8583/DE032_ACQ_CD",
-//					dbtrMemCode);
-//			JsonUtil.setVal(root, "/body/iso8583/DE037_REL_REF_NO",
-//					ACHUtil.subStringbyIndex(senderRefId.substring(senderRefId.length() - 12), 12));
-//			JsonUtil.setVal(root, "/body/iso8583/DE041_CRD_ACPT_TRM",
-//					"00000001");
-//			JsonUtil.setVal(root, "/body/iso8583/DE042_CRD_ACPT_ID",
-//					"GRP01 000015686");
-//			JsonUtil.setVal(root, "/body/iso8583/DE043_CRD_ACPT_LOC",
-//					"ACH NAPASVNVN            HANOI       VNM");
-//			JsonUtil.setVal(root, "/body/iso8583/DE048_ADD_PRV_INF",
-//					"Hoan Tra Giao Dich \r");
-//			JsonUtil.setVal(root, "/body/iso8583/DE049_TRN_CCY",
-//					"704");
-//			JsonUtil.setVal(root, "/body/iso8583/DE050_STL_CCY",
-//					"704");
-//			JsonUtil.setVal(root, "/body/iso8583/DE060_CNL_TP",
-//					"02");
-//			JsonUtil.setVal(root, "/body/iso8583/DE062_NAP_SVC_CD",
-//					AppConstant.ServiceId.SERVICE_RETURN);
-//			JsonUtil.setVal(root, "/body/iso8583/DE063_TRN_REF_NO",
-//					ACHUtil.subStringbyIndex(senderRefId.substring(senderRefId.length() - 16), 16));
-//			String de090 = JsonUtil.getVal(orgMessage, "/body/iso8583/MTI").asText() + JsonUtil.getVal(orgMessage, "/body/iso8583/DE011_TRACE_NO").asText()
-//					+ JsonUtil.getVal(orgMessage, "/body/iso8583/DE007_TRN_DT").asText()  + StringUtils.leftPad(JsonUtil.getVal(orgMessage, "/body/iso8583/DE032_ACQ_CD").asText(), 11, "0")
-//					+ "00000000000";
-//			JsonUtil.setVal(root, "/body/iso8583/DE090_ORG_TRN_KEY",
-//					de090);
-//			JsonUtil.setVal(root, "/body/iso8583/DE100_BEN_CD",
-//					"970457");
-//			JsonUtil.setVal(root, "/body/iso8583/DE102_SND_ACC_INF", fromAcc);
-//			JsonUtil.setVal(root, "/body/iso8583/DE103_RCV_ACC_INF",
-//					JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/TxInf/0/OrgnlTxRef/DbtrAcct/Id/Othr/Id").asText());
-//			JsonUtil.setVal(root, "/body/iso8583/DE104_TRN_CONT",
-//					"Hoan Tra Giao Dich");
-//
-//			//Remove empty
-//			JsonUtil.remove(root, "/body/iso8583/DE023_CRD_SEQ_NO");
-//			JsonUtil.remove(root, "/body/iso8583/DE010_BIL_CONV_RT");
-//			JsonUtil.remove(root, "/body/iso8583/DE006_BIL_AMT");
-//			JsonUtil.remove(root, "/body/iso8583/DE018_MER_CAT_CD");
-//			JsonUtil.remove(root, "/body/iso8583/DE038_AUTH_ID_RES");
-//			JsonUtil.remove(root, "/body/iso8583/DE026_PIN_CAP_CD");
-//			JsonUtil.remove(root, "/body/iso8583/DE035_TRK2_DAT");
-//			JsonUtil.remove(root, "/body/iso8583/DE051_BIL_CCY");
-//			JsonUtil.remove(root, "/body/iso8583/DE036_TRK3_DAT");
-//			JsonUtil.remove(root, "/body/iso8583/DE039_RES_CD");
-//			JsonUtil.remove(root, "/body/iso8583/DE045_TRK1_DAT");
-//			JsonUtil.remove(root, "/body/iso8583/DE120_BEN_INF");
-//			JsonUtil.remove(root, "/body/iso8583/DE052_PIN");
-//			JsonUtil.remove(root, "/body/iso8583/DE054_ADD_AMT");
-//			JsonUtil.remove(root, "/body/iso8583/DE055_EMV_DAT");
-//			JsonUtil.remove(root, "/body/iso8583/DE070_NET_MGT_CD");
-//			JsonUtil.remove(root, "/body/iso8583/DE105_NEW_PIN");
-//			JsonUtil.remove(root, "/body/iso8583/DE128_MAC_DAT");
-//
-//			return root.toPrettyString();
-//		} catch (Exception e) {
-//			logger.error("Exception when handle buildISO8583PACS004:" + e.getMessage());
-//			return "";
-//		}
-//	}
-//
+
+	public static String buildISO8583NRTNAK(String message, String err_code, String authIdRes) {
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			JsonNode rootPacs008 = objectMapper.readTree(message);
+
+			JsonUtil.setVal(rootPacs008, "/body/iso8583/MTI", "0210");
+			JsonUtil.setVal(rootPacs008, "/body/iso8583/DE039_RES_CD", err_code);
+
+			if(!StringUtils.isEmpty(authIdRes))
+				JsonUtil.setVal(rootPacs008, "/body/iso8583/DE038_AUTH_ID_RES", ACHUtil.subStringbyIndex(authIdRes, 6));
+
+			return rootPacs008.toPrettyString();
+		} catch (Exception e) {
+			logger.error("Exception when handle buildISO8583NRTNAK:" + e.getMessage());
+			return "";
+		}
+	}
+
+	public static String buildISO8583Investigation(String message, String orgMessage, String err_code, String authIdRes, String errException) {
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			JsonNode rootPacs008 = objectMapper.readTree(message);
+
+			JsonUtil.setVal(rootPacs008, "/body/iso8583/MTI", "0210");
+			JsonUtil.setVal(rootPacs008, "/body/iso8583/DE039_RES_CD", "00");
+			if (StringUtils.isNotEmpty(orgMessage)) {
+				JsonNode rootOrgMessage = objectMapper.readTree(orgMessage);
+//				#Add 48: 13 for Original Trx(4Bytes)+ #41 for Original Trx(8Bytes) + #39 forOriginal Trx(2 Bytes)
+				String orgDe013 = ACHUtil.subStringbyIndex(JsonUtil.getVal(rootOrgMessage, "/body/iso8583/DE013_LOC_TRN_DATE").asText(), 4);
+				String orgDe041 = ACHUtil.subStringbyIndex(JsonUtil.getVal(rootOrgMessage, "/body/iso8583/DE041_CRD_ACPT_TRM").asText(), 8);
+				if ("12".equals(err_code)) {
+				    String investDe048 = JsonUtil.getVal(rootPacs008, "/body/iso8583/DE048_ADD_PRV_INF").asText() + err_code;
+                    JsonUtil.setVal(rootPacs008, "/body/iso8583/DE048_ADD_PRV_INF", investDe048);
+                }
+				else {
+//                    String orgDe039 = ACHUtil.subStringbyIndex(JsonUtil.getVal(rootOrgMessage, "/body/iso8583/DE039_RES_CD").asText(), 2);
+                    JsonUtil.setVal(rootPacs008, "/body/iso8583/DE048_ADD_PRV_INF", orgDe013 + orgDe041 + err_code);
+                }
+//				JsonUtil.setVal(rootPacs008, "/body/iso8583/DE012_LOC_TRN_TIME", JsonUtil.getVal(rootOrgMessage, "/body/iso8583/DE012_LOC_TRN_TIME").asText());
+//				JsonUtil.setVal(rootPacs008, "/body/iso8583/DE013_LOC_TRN_DATE", JsonUtil.getVal(rootOrgMessage, "/body/iso8583/DE013_LOC_TRN_DATE").asText());
+			}
+            if (AppConstant.SystemResponse.SYSTEM_ERROR_EXCEPTION_CODE.equals(errException)) {
+                JsonUtil.setVal(rootPacs008, "/body/iso8583/DE039_RES_CD", errException);
+            }
+            //remove 22,25,42,43
+			JsonUtil.remove(rootPacs008, "/body/iso8583/DE022_POS_MODE");
+			JsonUtil.remove(rootPacs008, "/body/iso8583/DE025_POS_COND_CD");
+			JsonUtil.remove(rootPacs008, "/body/iso8583/DE042_CRD_ACPT_ID");
+			JsonUtil.remove(rootPacs008, "/body/iso8583/DE043_CRD_ACPT_LOC");
+
+			if(!StringUtils.isEmpty(authIdRes))
+				JsonUtil.setVal(rootPacs008, "/body/iso8583/DE038_AUTH_ID_RES", ACHUtil.subStringbyIndex(authIdRes, 6));
+
+			return rootPacs008.toPrettyString();
+		} catch (Exception e) {
+			logger.error("Exception when handle buildISO8583Investigation:" + e.getMessage());
+			return "";
+		}
+	}
+
+	public static String buildISO8583PACS004(String messagePacs004, String orgMessageIso8583, String dbtrMemCode) {
+		try {
+			JsonNode root = ISO8583JSON.deepCopy();
+			ObjectMapper objectMapper = new ObjectMapper();
+			JsonNode rootPacs004 = objectMapper.readTree(messagePacs004);
+			JsonNode orgMessage = objectMapper.readTree(orgMessageIso8583);
+
+			String senderRefId = JsonUtil.getVal(rootPacs004, "/Header/SenderReference").asText();
+			String fromAcc = JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/TxInf/0/OrgnlTxRef/CdtrAcct/Id/Othr/Id").asText();
+
+			JsonUtil.setVal(root, "/body/iso8583/MTI",
+					"0200");
+			JsonUtil.setVal(root, "/body/iso8583/DE002_PAN", fromAcc);
+			JsonUtil.setVal(root, "/body/iso8583/DE003_PROC_CD",
+					getProcessCode(JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/TxInf/0/OrgnlTxRef/DbtrAcct/Tp/Prtry").asText(),
+							JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/TxInf/0/OrgnlTxRef/CdtrAcct/Tp/Prtry").asText()));
+//					JsonUtil.getVal(rootPacs008, "Document/PmtRtr/TxInf/OrgnlInstrId").asText().substring(0, 6));
+			JsonUtil.setVal(root, "/body/iso8583/DE004_TRN_AMT",
+					ACHUtil.getAmount(JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/TxInf/0/RtrdIntrBkSttlmAmt/Value").asText()));
+			JsonUtil.setVal(root, "/body/iso8583/DE005_STL_AMT",
+					ACHUtil.getAmount(JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/TxInf/0/RtrdIntrBkSttlmAmt/Value").asText()));
+			JsonUtil.setVal(root, "/body/iso8583/DE007_TRN_DT",
+					DateUtil.formatMMddHHmmss(DateUtil.parseTimestampZ2Date(JsonUtil.getVal(rootPacs004, "/Payload/AppHdr/CreDt").asText())));
+			JsonUtil.setVal(root, "/body/iso8583/DE009_STL_CONV_RT",
+					"00000001");
+			JsonUtil.setVal(root, "/body/iso8583/DE011_TRACE_NO",
+					ACHUtil.subStringbyIndex(senderRefId.substring(senderRefId.length() - 6), 6));
+			String MMddHHmmss = DateUtil.formatMMddHHmmss(DateUtil.parseTimestampXXX2Date(JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/GrpHdr/CreDtTm").asText()));
+			JsonUtil.setVal(root, "/body/iso8583/DE012_LOC_TRN_TIME",
+					MMddHHmmss.substring(4));
+			JsonUtil.setVal(root, "/body/iso8583/DE013_LOC_TRN_DATE",
+					MMddHHmmss.substring(0, 4));
+			// handle optional IntrBkSttlmDt
+			String intrBkSttlmDt = JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/GrpHdr/IntrBkSttlmDt").asText();
+			if (StringUtils.isNotEmpty(intrBkSttlmDt)) {
+				JsonUtil.setVal(root, "/body/iso8583/DE015_STL_DATE",
+						intrBkSttlmDt.substring(5).replace("-", ""));
+			} else {
+				intrBkSttlmDt = JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/TxInf/0/IntrBkSttlmDt").asText();
+				JsonUtil.setVal(root, "/body/iso8583/DE015_STL_DATE",
+						StringUtils.isEmpty(intrBkSttlmDt) ? MMddHHmmss.substring(0, 4) : intrBkSttlmDt.substring(5).replace("-", ""));
+			}
+			JsonUtil.setVal(root, "/body/iso8583/DE019_ACQ_CTRY_CD",
+					"704");
+			JsonUtil.setVal(root, "/body/iso8583/DE022_POS_MODE",
+					"000");
+			JsonUtil.setVal(root, "/body/iso8583/DE025_POS_COND_CD",
+					"00");
+			JsonUtil.setVal(root, "/body/iso8583/DE032_ACQ_CD",
+					dbtrMemCode);
+			JsonUtil.setVal(root, "/body/iso8583/DE037_REL_REF_NO",
+					ACHUtil.subStringbyIndex(senderRefId.substring(senderRefId.length() - 12), 12));
+			JsonUtil.setVal(root, "/body/iso8583/DE041_CRD_ACPT_TRM",
+					"00000001");
+			JsonUtil.setVal(root, "/body/iso8583/DE042_CRD_ACPT_ID",
+					"GRP01 000015686");
+			JsonUtil.setVal(root, "/body/iso8583/DE043_CRD_ACPT_LOC",
+					"ACH NAPASVNVN            HANOI       VNM");
+			JsonUtil.setVal(root, "/body/iso8583/DE048_ADD_PRV_INF",
+					"Hoan Tra Giao Dich \r");
+			JsonUtil.setVal(root, "/body/iso8583/DE049_TRN_CCY",
+					"704");
+			JsonUtil.setVal(root, "/body/iso8583/DE050_STL_CCY",
+					"704");
+			JsonUtil.setVal(root, "/body/iso8583/DE060_CNL_TP",
+					"02");
+			JsonUtil.setVal(root, "/body/iso8583/DE062_NAP_SVC_CD",
+					AppConstant.ServiceId.SERVICE_RETURN);
+			JsonUtil.setVal(root, "/body/iso8583/DE063_TRN_REF_NO",
+					ACHUtil.subStringbyIndex(senderRefId.substring(senderRefId.length() - 16), 16));
+			String de090 = JsonUtil.getVal(orgMessage, "/body/iso8583/MTI").asText() + JsonUtil.getVal(orgMessage, "/body/iso8583/DE011_TRACE_NO").asText()
+					+ JsonUtil.getVal(orgMessage, "/body/iso8583/DE007_TRN_DT").asText()  + StringUtils.leftPad(JsonUtil.getVal(orgMessage, "/body/iso8583/DE032_ACQ_CD").asText(), 11, "0")
+					+ "00000000000";
+			JsonUtil.setVal(root, "/body/iso8583/DE090_ORG_TRN_KEY",
+					de090);
+			JsonUtil.setVal(root, "/body/iso8583/DE100_BEN_CD",
+					"970457");
+			JsonUtil.setVal(root, "/body/iso8583/DE102_SND_ACC_INF", fromAcc);
+			JsonUtil.setVal(root, "/body/iso8583/DE103_RCV_ACC_INF",
+					JsonUtil.getVal(rootPacs004, "/Payload/Document/PmtRtr/TxInf/0/OrgnlTxRef/DbtrAcct/Id/Othr/Id").asText());
+			JsonUtil.setVal(root, "/body/iso8583/DE104_TRN_CONT",
+					"Hoan Tra Giao Dich");
+
+			//Remove empty
+			JsonUtil.remove(root, "/body/iso8583/DE023_CRD_SEQ_NO");
+			JsonUtil.remove(root, "/body/iso8583/DE010_BIL_CONV_RT");
+			JsonUtil.remove(root, "/body/iso8583/DE006_BIL_AMT");
+			JsonUtil.remove(root, "/body/iso8583/DE018_MER_CAT_CD");
+			JsonUtil.remove(root, "/body/iso8583/DE038_AUTH_ID_RES");
+			JsonUtil.remove(root, "/body/iso8583/DE026_PIN_CAP_CD");
+			JsonUtil.remove(root, "/body/iso8583/DE035_TRK2_DAT");
+			JsonUtil.remove(root, "/body/iso8583/DE051_BIL_CCY");
+			JsonUtil.remove(root, "/body/iso8583/DE036_TRK3_DAT");
+			JsonUtil.remove(root, "/body/iso8583/DE039_RES_CD");
+			JsonUtil.remove(root, "/body/iso8583/DE045_TRK1_DAT");
+			JsonUtil.remove(root, "/body/iso8583/DE120_BEN_INF");
+			JsonUtil.remove(root, "/body/iso8583/DE052_PIN");
+			JsonUtil.remove(root, "/body/iso8583/DE054_ADD_AMT");
+			JsonUtil.remove(root, "/body/iso8583/DE055_EMV_DAT");
+			JsonUtil.remove(root, "/body/iso8583/DE070_NET_MGT_CD");
+			JsonUtil.remove(root, "/body/iso8583/DE105_NEW_PIN");
+			JsonUtil.remove(root, "/body/iso8583/DE128_MAC_DAT");
+
+			return root.toPrettyString();
+		} catch (Exception e) {
+			logger.error("Exception when handle buildISO8583PACS004:" + e.getMessage());
+			return "";
+		}
+	}
+
 //	public static String buildISO8583Pacs004FromCam043(String message, String orgMessageIso8583, String CreDt, String dbtrMemCode) {
 //		try {
 //			JsonNode root = ISO8583JSON.deepCopy();
@@ -2591,22 +2591,22 @@ public class MsgBuilder {
 //		}
 //	}
 //
-//	private static String getProcessCode(String input1, String input2){
-//		String methodType1;
-//		String methodType2;
-//		if (AppConstant.MethodType.ACCT_TYPE.equals(input1.toUpperCase()))
-//			methodType1 = "20";
-//		else
-//			methodType1 = "00";
-//
-//		if (AppConstant.MethodType.ACCT_TYPE.equals(input2.toUpperCase()))
-//			methodType2 = "20";
-//		else
-//			methodType2 = "00";
-//
-//		return "91" + methodType1 + methodType2;
-//	}
-//
+	private static String getProcessCode(String input1, String input2){
+		String methodType1;
+		String methodType2;
+		if (AppConstant.MethodType.ACCT_TYPE.equals(input1.toUpperCase()))
+			methodType1 = "20";
+		else
+			methodType1 = "00";
+
+		if (AppConstant.MethodType.ACCT_TYPE.equals(input2.toUpperCase()))
+			methodType2 = "20";
+		else
+			methodType2 = "00";
+
+		return "91" + methodType1 + methodType2;
+	}
+
 	public static String buildISO8583DASNACK(String msg, String err_code) {
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();

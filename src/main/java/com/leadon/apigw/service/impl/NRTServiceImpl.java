@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.leadon.apigw.constant.AppConstant;
 import com.leadon.apigw.dto.NPResponse;
 import com.leadon.apigw.dto.RestDataObj;
+import com.leadon.apigw.kafka.CustomKafkaMessage;
 import com.leadon.apigw.model.*;
 import com.leadon.apigw.repository.TransAchActivityRepository;
 import com.leadon.apigw.repository.TransactionRepository;
@@ -21,6 +22,8 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service("nrtService")
@@ -176,7 +179,59 @@ public class NRTServiceImpl implements NRTService {
         }
         return objRes;
     }
+    public DataObj handlePacs008(JsonNode root, String message) {
+        String transId = "";
+        Map<String, String> map = new HashMap<>();
+        try {
+            String errorCode = "", errorDesc = "";
+            Transaction transaction = new Transaction();
+            TransAchDetail transAchDetail = new TransAchDetail();
+            TransAchActivity transAchActivity = new TransAchActivity();
 
+            // build init trans
+            ACHUtil.initTransPacs008Nrt(root, transaction, transAchDetail, transAchActivity);
+            // Init trans
+            DataObj dataObj = transactionRepository.initTrans(transaction, transAchDetail, transAchActivity);
+            errorCode = dataObj.getEcode();
+            errorDesc = dataObj.getEdesc();
+            transId = String.valueOf(transaction.getTransId());
+            map.put("transId", transId);
+            logger.debug("After Init trans, errCode: " + errorCode + ", errDesc: " + errorDesc + ", transId: "
+                    + transaction.getTransId() + ", senderRef: " + transAchDetail.getOrgSenderRefId());
+            // push log request
+            producer.pushMsgLogReq(transId, message, AppConstant.LogConfig.NAPAS, AppConstant.LogConfig.BANK,
+                    AppConstant.LogConfig.CATEGORY_NAPAS);
+
+            if (AppConstant.AchEcode.ECODE_SUCCESS.equals(errorCode)) {
+                // Push msg to queue
+                CustomKafkaMessage kkMsg = new CustomKafkaMessage();
+                kkMsg.setTransId(String.valueOf(transaction.getTransId()));
+                kkMsg.setErrCode(errorCode);
+                kkMsg.setErrDesc(errorDesc);
+                kkMsg.setMessage(message);
+                kkMsg.setMsgIdr(AppConstant.MsgIdr.PACS008);
+                kkMsg.setActStep(AppConstant.TransStep.ACT_STEP_SEND_PACS008);
+                kkMsg.setSenderRefId(transAchDetail.getOrgSenderRefId());
+                producer.sendMessage(kkMsg, AppConstant.QueueConfig.TOPIC_NRT_IN_PACS008);
+            } else if (errorCode.equals(AppConstant.SystemResponse.DUPLICATE_XREF_ID_CODE)) {
+                map.put("duplicated", AppConstant.ResponseDupl.RESP_DUPLICATED);
+                return new DataObj(AppConstant.ResponseType.RESP_FAILURE_TYPE,
+                        AppConstant.ResponseMsg.RESP_INVALID_MESSAGE, map);
+            } else {
+                map.put("duplicated", AppConstant.ResponseDupl.RESP_NOT_DUPLICATED);
+                return new DataObj(AppConstant.ResponseType.RESP_FAILURE_TYPE,
+                        AppConstant.ResponseMsg.RESP_INVALID_MESSAGE, map);
+            }
+        } catch (Exception e) {
+            logger.error("Exception when handle handlePacs008:" + e.getMessage());
+            map.put("duplicated", AppConstant.ResponseDupl.RESP_NOT_DUPLICATED);
+            return new DataObj(AppConstant.ResponseType.RESP_FAILURE_TYPE, AppConstant.ResponseMsg.RESP_FAIL_MESSAGE,
+                    map);
+        }
+        map.put("duplicated", AppConstant.ResponseDupl.RESP_NOT_DUPLICATED);
+        return new DataObj(AppConstant.ResponseType.RESP_SUCCESS_TYPE, AppConstant.ResponseMsg.RESP_SUCCESS_MESSAGE,
+                map);
+    }
 
     private void parseNrtOut2Obj(JsonNode root, Transaction transaction, TransAchDetail transAchDetail) {
         try {
@@ -379,4 +434,5 @@ public class NRTServiceImpl implements NRTService {
         }
         return dataObj;
     }
+
 }

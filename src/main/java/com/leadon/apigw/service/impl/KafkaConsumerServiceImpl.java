@@ -5,18 +5,23 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leadon.apigw.config.AppProperties;
 import com.leadon.apigw.constant.AppConstant;
+import com.leadon.apigw.dto.NPResponse;
+import com.leadon.apigw.dto.RestDataObj;
 import com.leadon.apigw.kafka.CustomKafkaMessage;
 import com.leadon.apigw.model.AchCustomerInfo;
 import com.leadon.apigw.model.DataObj;
 import com.leadon.apigw.model.TransMessageIso8583;
 import com.leadon.apigw.model.TransMessageLog;
+import com.leadon.apigw.repository.TransAchActivityRepository;
 import com.leadon.apigw.repository.TransMessageISO8583Repository;
 import com.leadon.apigw.repository.TransMessageLogRepository;
 import com.leadon.apigw.repository.TransactionRepository;
 import com.leadon.apigw.service.AchCustomerInfoService;
 import com.leadon.apigw.service.KafkaConsumerService;
 import com.leadon.apigw.service.KafkaProducerService;
+import com.leadon.apigw.util.ACHUtil;
 import com.leadon.apigw.util.JsonUtil;
+import com.leadon.apigw.util.MsgBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,8 +44,8 @@ public class KafkaConsumerServiceImpl implements KafkaConsumerService {
     @Autowired
     private TransactionRepository transactionRepository;
 
-//    @Autowired
-//    private TransAchActivityRepository transAchActivityRepository;
+    @Autowired
+    private TransAchActivityRepository transAchActivityRepository;
 
     @Autowired
     private TransMessageLogRepository transMessageLogRepository;
@@ -444,94 +449,96 @@ public class KafkaConsumerServiceImpl implements KafkaConsumerService {
 
     @KafkaListener(topics = "ACH.NACK.IN.ISO8583", groupId = "group01")
     public void consumeNackIso8583(CustomKafkaMessage kafkaMessage) {
-//        try {
-//            logger.debug("consumeNackIso8583 Consumed Message: "+ kafkaMessage.getOrgSenderRefId());
-//            String message = kafkaMessage.getMessage();
-//            String senderRefId = kafkaMessage.getSenderRefId();
-//            String err_code = kafkaMessage.getErrCode();
-//            String err_desc = kafkaMessage.getErrDesc();
-//            String actStep = kafkaMessage.getActStep();
-//            String actDes = kafkaMessage.getActDesc();
-//            String msgIdr = kafkaMessage.getMsgIdr();
-//            String authIdRes = kafkaMessage.getAuthIdRes();
-//            String transId = kafkaMessage.getTransId();
-//            String orgMessage = kafkaMessage.getOrgMessage();
-//            String countCheck = kafkaMessage.getCheckInvest();
-//            String errException = kafkaMessage.getErrException();
-//
-//            logger.debug("++++ Starting build msg iso8583 in queue ACH.NACK.IN.ISO8583" + ", transId: "
-//                    + transId + ", senderRef: " + senderRefId + ", error_code:" + err_code + ", err_desc" + err_desc);
-//            String iso8583Message;
-//            // 17/12/2020 comment send to bank from TuanLa - open 25/12/2020
-//            if (AppConstant.MsgIdr.PACS004.equals(msgIdr)) {
-//                ObjectMapper objectMapper1 = new ObjectMapper();
-//                JsonNode rootPacs = objectMapper1.readTree(message);
-//                String dbtrMemCode = JsonUtil
-//                        .getVal(rootPacs,
-//                                "/Payload/Document/PmtRtr/TxInf/0/OrgnlTxRef/DbtrAgt/FinInstnId/ClrSysMmbId/MmbId")
-//                        .asText();
-//
-//                iso8583Message = MsgBuilder.buildISO8583PACS004(message, orgMessage, appProperties.getProperty(dbtrMemCode));
-//            }
-//            else if (countCheck != null && 1 <= Integer.parseInt(countCheck))
-//                iso8583Message = MsgBuilder.buildISO8583Investigation(message, orgMessage, err_code, authIdRes, errException);
-//            else
-//                iso8583Message = MsgBuilder.buildISO8583NRTNAK(message, err_code, authIdRes);
-//            // luu log msg hach toan req
-//            producer.pushMsgLogReq(String.valueOf(transId), iso8583Message, AppConstant.LogConfig.BANK, AppConstant.LogConfig.COREBANKING,
-//                    AppConstant.LogConfig.CATEGORY_INTERNAL);
-//
-//            // Push iso8583 message
-//            producer.pushIso8583Message(transId, senderRefId, iso8583Message, iso8583Message, AppConstant.LogConfig.RESPONSE , AppConstant.LogConfig.NAPAS, AppConstant.LogConfig.BANK,
-//                    AppConstant.LogConfig.CATEGORY_EXTERNAL);
-//
-//            //Call igate bank
-//            RestDataObj restData = BankCaller.send2Bank(iso8583Message, msgIdr);
-//            DataObj dataObj2 = handlePutMxBankResp(restData);
-//            String transEcode = dataObj2.getEcode();
-//            String transEdesc = dataObj2.getEdesc();
-//
-//            // Push iso8583 message
-//            if (!StringUtils.isEmpty(restData.getResponse())) {
-//                producer.pushIso8583Message(transId, kafkaMessage.getOrgSenderRefId(), restData.getResponse(), restData.getResponse(), AppConstant.LogConfig.RESPONSE, AppConstant.LogConfig.COREBANKING, AppConstant.LogConfig.BANK,
-//                        AppConstant.LogConfig.CATEGORY_INTERNAL);
-//            }
-//
-//            logger.debug("After call igate bank send iso8583, errCode: " + transEcode + ", errDesc: " + transEdesc + ", transId: "
-//                    + transId + ", senderRef: " + senderRefId);
-//
-//            // only for return in payment ,update status transaction , push activity ,log via pacs004 transId
-//            if (AppConstant.MsgIdr.PACS004.equals(msgIdr)) {
-//                String pacs004TransId = kafkaMessage.getNewTransId();
-//                transactionRepository.updateTransactionStatusJpa(Long.valueOf(pacs004TransId), transEcode, transEdesc);
-//
-//                producer.pushMsgLogReq(pacs004TransId, iso8583Message, AppConstant.LogConfig.BANK, AppConstant.LogConfig.COREBANKING,
-//                        AppConstant.LogConfig.CATEGORY_INTERNAL);
-//
-//                producer.pushMsgLogRes(pacs004TransId, ACHUtil.parseObjectToString(restData), AppConstant.LogConfig.BANK, AppConstant.LogConfig.COREBANKING,
-//                        AppConstant.LogConfig.CATEGORY_INTERNAL);
-//
-//
-//                // push activity send to core
-//                transAchActivityRepository.pushActivity(Long.parseLong(pacs004TransId), senderRefId,
-//                        AppConstant.MsgIdr.ISO8583,
-//                        "Send Pacs004 message ISO8583 to Bank| Original Pacs008 transId : " + transId,
-//                        AppConstant.LogConfig.REQUEST,
-//                        iso8583Message,
-//                        new Date(),
-//                        AppConstant.TransStep.ACT_STEP_SEND_PACS004, transEcode, transEdesc); // original transId of pacs008
-//
-//
-//            }
-//            // Push activity request of bank iso8583 ach
-//            transAchActivityRepository.pushActivity(Long.parseLong(transId), senderRefId, AppConstant.MsgIdr.ISO8583,
-//                    actDes, AppConstant.LogConfig.RESPONSE, iso8583Message, new Date(),
-//                    actStep, transEcode, transEdesc); // update errCode from pacs002
-//
-//
-//        } catch (Exception e) {
-//            logger.error("Exception when handle consumeNackIso8583:" + e.getMessage());
-//        }
+        try {
+            logger.debug("consumeNackIso8583 Consumed Message: "+ kafkaMessage.getOrgSenderRefId());
+            String message = kafkaMessage.getMessage();
+            String senderRefId = kafkaMessage.getSenderRefId();
+            String err_code = kafkaMessage.getErrCode();
+            String err_desc = kafkaMessage.getErrDesc();
+            String actStep = kafkaMessage.getActStep();
+            String actDes = kafkaMessage.getActDesc();
+            String msgIdr = kafkaMessage.getMsgIdr();
+            String authIdRes = kafkaMessage.getAuthIdRes();
+            String transId = kafkaMessage.getTransId();
+            String orgMessage = kafkaMessage.getOrgMessage();
+            String countCheck = kafkaMessage.getCheckInvest();
+            String errException = kafkaMessage.getErrException();
+
+            logger.debug("++++ Starting build msg iso8583 in queue ACH.NACK.IN.ISO8583" + ", transId: "
+                    + transId + ", senderRef: " + senderRefId + ", error_code:" + err_code + ", err_desc" + err_desc);
+            String iso8583Message;
+            // 17/12/2020 comment send to bank from TuanLa - open 25/12/2020
+            if (AppConstant.MsgIdr.PACS004.equals(msgIdr)) {
+                ObjectMapper objectMapper1 = new ObjectMapper();
+                JsonNode rootPacs = objectMapper1.readTree(message);
+                String dbtrMemCode = JsonUtil
+                        .getVal(rootPacs,
+                                "/Payload/Document/PmtRtr/TxInf/0/OrgnlTxRef/DbtrAgt/FinInstnId/ClrSysMmbId/MmbId")
+                        .asText();
+
+                iso8583Message = MsgBuilder.buildISO8583PACS004(message, orgMessage, appProperties.getProperty(dbtrMemCode));
+            }
+            else if (countCheck != null && 1 <= Integer.parseInt(countCheck))
+                iso8583Message = MsgBuilder.buildISO8583Investigation(message, orgMessage, err_code, authIdRes, errException);
+            else
+                iso8583Message = MsgBuilder.buildISO8583NRTNAK(message, err_code, authIdRes);
+            // luu log msg hach toan req
+            producer.pushMsgLogReq(String.valueOf(transId), iso8583Message, AppConstant.LogConfig.BANK, AppConstant.LogConfig.COREBANKING,
+                    AppConstant.LogConfig.CATEGORY_INTERNAL);
+
+            // Push iso8583 message
+            producer.pushIso8583Message(transId, senderRefId, iso8583Message, iso8583Message, AppConstant.LogConfig.RESPONSE , AppConstant.LogConfig.NAPAS, AppConstant.LogConfig.BANK,
+                    AppConstant.LogConfig.CATEGORY_EXTERNAL);
+
+            //TODO Call igate bank
+            //RestDataObj restData = BankCaller.send2Bank(iso8583Message, msgIdr);
+            RestDataObj restData = new RestDataObj();
+            restData.setHttpStatus("200");
+            DataObj dataObj2 = handlePutMxBankResp(restData);
+            String transEcode = dataObj2.getEcode();
+            String transEdesc = dataObj2.getEdesc();
+
+            // Push iso8583 message
+            if (!StringUtils.isEmpty(restData.getResponse())) {
+                producer.pushIso8583Message(transId, kafkaMessage.getOrgSenderRefId(), restData.getResponse(), restData.getResponse(), AppConstant.LogConfig.RESPONSE, AppConstant.LogConfig.COREBANKING, AppConstant.LogConfig.BANK,
+                        AppConstant.LogConfig.CATEGORY_INTERNAL);
+            }
+
+            logger.debug("After call igate bank send iso8583, errCode: " + transEcode + ", errDesc: " + transEdesc + ", transId: "
+                    + transId + ", senderRef: " + senderRefId);
+
+            // only for return in payment ,update status transaction , push activity ,log via pacs004 transId
+            if (AppConstant.MsgIdr.PACS004.equals(msgIdr)) {
+                String pacs004TransId = kafkaMessage.getNewTransId();
+                transactionRepository.updateTransactionStatusJpa(Long.valueOf(pacs004TransId), transEcode, transEdesc);
+
+                producer.pushMsgLogReq(pacs004TransId, iso8583Message, AppConstant.LogConfig.BANK, AppConstant.LogConfig.COREBANKING,
+                        AppConstant.LogConfig.CATEGORY_INTERNAL);
+
+                producer.pushMsgLogRes(pacs004TransId, ACHUtil.parseObjectToString(restData), AppConstant.LogConfig.BANK, AppConstant.LogConfig.COREBANKING,
+                        AppConstant.LogConfig.CATEGORY_INTERNAL);
+
+
+                // push activity send to core
+                transAchActivityRepository.pushActivity(Long.parseLong(pacs004TransId), senderRefId,
+                        AppConstant.MsgIdr.ISO8583,
+                        "Send Pacs004 message ISO8583 to Bank| Original Pacs008 transId : " + transId,
+                        AppConstant.LogConfig.REQUEST,
+                        iso8583Message,
+                        new Date(),
+                        AppConstant.TransStep.ACT_STEP_SEND_PACS004, transEcode, transEdesc); // original transId of pacs008
+
+
+            }
+            // Push activity request of bank iso8583 ach
+            transAchActivityRepository.pushActivity(Long.parseLong(transId), senderRefId, AppConstant.MsgIdr.ISO8583,
+                    actDes, AppConstant.LogConfig.RESPONSE, iso8583Message, new Date(),
+                    actStep, transEcode, transEdesc); // update errCode from pacs002
+
+
+        } catch (Exception e) {
+            logger.error("Exception when handle consumeNackIso8583:" + e.getMessage());
+        }
     }
 
     @KafkaListener(topics = "ACH.INQUIRY.IN", groupId = "group01")
@@ -1082,72 +1089,72 @@ public class KafkaConsumerServiceImpl implements KafkaConsumerService {
 //        return dataObj;
 //    }
 
-//    private DataObj handlePutMxBankResp(RestDataObj restDataObj) {
-//        DataObj dataObj = new DataObj();
-//        try {
-//            String partnerCode = AppConstant.AchEcode.ECODE_UNKONW;
-//            if (restDataObj != null && restDataObj.getHttpStatus() != null) {
-//                if (AppConstant.HTTPConfig.HTTP_STATUS_200.equals(restDataObj.getHttpStatus())) {
-//                    partnerCode = restDataObj.getHttpStatus().toUpperCase();
-//                    if (!StringUtils.isEmpty(restDataObj.getResponse())) {
-//                        ObjectMapper objectMapper = new ObjectMapper();
-//                        JsonNode jsonNodeIso8583 = objectMapper.readTree(restDataObj.getResponse());
-//
-//                        partnerCode = JsonUtil.getVal(jsonNodeIso8583, "/body/iso8583/DE039_RES_CD").asText();
-//
-//                    }
-//                } else if ("".equals(restDataObj.getHttpStatus())) {
-//                    partnerCode = AppConstant.HTTPConfig.HTTP_STATUS_5XX;
-//                } else {
-//                    partnerCode = restDataObj.getHttpStatus();
-//                }
-//            } else {
-//                if (restDataObj != null && restDataObj.isReadTimedOut()) {
-//                    partnerCode = AppConstant.AchEcode.ECODE_UNKONW; // time out at iso8583 code
-//                    dataObj.setEdesc("Send success to Igate but no response after 15s");
-//                } else {
-//                    partnerCode = AppConstant.AchEcode.ECODE_SYSTEM_ERROR;
-//                }
-//
-//            }
-//            logger.info("~~~~~~~partnerCode handlePutMxBankResp~~~~~~" + partnerCode);
-//            dataObj.setEcode(partnerCode);
-//            if ("00".equals(partnerCode))
-//                dataObj.setEdesc("Get response successfully from bank");
-////            dataObj = transactionRepository.mapErrorCode(AppConstant.Common.ORG_BANK, AppConstant.ChannelId.ACH_IN, partnerCode);
-//        } catch (Exception e) {
-//            logger.error("Exception when handle handlePutMxBankResp:" + e.getMessage());
-//            dataObj.setEcode(AppConstant.SystemResponse.SYSTEM_ERROR_CODE);
-//            dataObj.setEdesc(AppConstant.SystemResponse.SYSTEM_ERROR_DESC);
-//        }
-//        return dataObj;
-//    }
-//    private DataObj handleInqTransNrtNPResp(RestDataObj restDataObj) {
-//        DataObj dataObj = new DataObj();
-//        try {
-//            String partnerCode = AppConstant.AchEcode.ECODE_UNKONW;
-//            if (restDataObj != null && restDataObj.getHttpStatus() != null && restDataObj.getResponse() != null) {
-//                if (AppConstant.HTTPConfig.HTTP_STATUS_200.equals(restDataObj.getHttpStatus())) {
-//                    NPResponse npResponse = JsonUtil.parseJson2NPResponse(restDataObj.getResponse());
-//                    partnerCode = restDataObj.getHttpStatus().toUpperCase() + "_" + (StringUtils.isEmpty(npResponse.getType()) ? "NULL" : npResponse.getType().toUpperCase())
-//                            + "_" + (StringUtils.isEmpty(npResponse.getDuplicated()) ? "NULL" : npResponse.getDuplicated().toUpperCase());
-//                } else if (AppConstant.HTTPConfig.HTTP_STATUS_404.equals(restDataObj.getHttpStatus())) {
-//                    JsonNode jsonReps = JsonUtil.toJsonNode(restDataObj.getResponse());
-//                    partnerCode = JsonUtil.getVal(jsonReps, "/errorCode").asText();
-//                } else {
-//                    partnerCode = restDataObj.getHttpStatus();
-//                }
-//            } else {
-//                partnerCode = AppConstant.AchEcode.ECODE_SYSTEM_ERROR;
-//            }
-//            dataObj = transactionRepository.mapErrorCode(AppConstant.Common.ORG_NAPAS, AppConstant.ChannelId.ACH,
-//                    partnerCode);
-//        } catch (Exception e) {
-//            logger.error("Exception when handle handleInqTransNrtNPResp:" + e.getMessage());
-//            dataObj.setEcode(AppConstant.SystemResponse.SYSTEM_ERROR_CODE);
-//            dataObj.setEdesc(AppConstant.SystemResponse.SYSTEM_ERROR_DESC);
-//        }
-//        return dataObj;
-//    }
+    private DataObj handlePutMxBankResp(RestDataObj restDataObj) {
+        DataObj dataObj = new DataObj();
+        try {
+            String partnerCode = AppConstant.AchEcode.ECODE_UNKONW;
+            if (restDataObj != null && restDataObj.getHttpStatus() != null) {
+                if (AppConstant.HTTPConfig.HTTP_STATUS_200.equals(restDataObj.getHttpStatus())) {
+                    partnerCode = restDataObj.getHttpStatus().toUpperCase();
+                    if (!StringUtils.isEmpty(restDataObj.getResponse())) {
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        JsonNode jsonNodeIso8583 = objectMapper.readTree(restDataObj.getResponse());
+
+                        partnerCode = JsonUtil.getVal(jsonNodeIso8583, "/body/iso8583/DE039_RES_CD").asText();
+
+                    }
+                } else if ("".equals(restDataObj.getHttpStatus())) {
+                    partnerCode = AppConstant.HTTPConfig.HTTP_STATUS_5XX;
+                } else {
+                    partnerCode = restDataObj.getHttpStatus();
+                }
+            } else {
+                if (restDataObj != null && restDataObj.isReadTimedOut()) {
+                    partnerCode = AppConstant.AchEcode.ECODE_UNKONW; // time out at iso8583 code
+                    dataObj.setEdesc("Send success to Igate but no response after 15s");
+                } else {
+                    partnerCode = AppConstant.AchEcode.ECODE_SYSTEM_ERROR;
+                }
+
+            }
+            logger.info("~~~~~~~partnerCode handlePutMxBankResp~~~~~~" + partnerCode);
+            dataObj.setEcode(partnerCode);
+            if ("00".equals(partnerCode))
+                dataObj.setEdesc("Get response successfully from bank");
+//            dataObj = transactionRepository.mapErrorCode(AppConstant.Common.ORG_BANK, AppConstant.ChannelId.ACH_IN, partnerCode);
+        } catch (Exception e) {
+            logger.error("Exception when handle handlePutMxBankResp:" + e.getMessage());
+            dataObj.setEcode(AppConstant.SystemResponse.SYSTEM_ERROR_CODE);
+            dataObj.setEdesc(AppConstant.SystemResponse.SYSTEM_ERROR_DESC);
+        }
+        return dataObj;
+    }
+    private DataObj handleInqTransNrtNPResp(RestDataObj restDataObj) {
+        DataObj dataObj = new DataObj();
+        try {
+            String partnerCode = AppConstant.AchEcode.ECODE_UNKONW;
+            if (restDataObj != null && restDataObj.getHttpStatus() != null && restDataObj.getResponse() != null) {
+                if (AppConstant.HTTPConfig.HTTP_STATUS_200.equals(restDataObj.getHttpStatus())) {
+                    NPResponse npResponse = JsonUtil.parseJson2NPResponse(restDataObj.getResponse());
+                    partnerCode = restDataObj.getHttpStatus().toUpperCase() + "_" + (StringUtils.isEmpty(npResponse.getType()) ? "NULL" : npResponse.getType().toUpperCase())
+                            + "_" + (StringUtils.isEmpty(npResponse.getDuplicated()) ? "NULL" : npResponse.getDuplicated().toUpperCase());
+                } else if (AppConstant.HTTPConfig.HTTP_STATUS_404.equals(restDataObj.getHttpStatus())) {
+                    JsonNode jsonReps = JsonUtil.toJsonNode(restDataObj.getResponse());
+                    partnerCode = JsonUtil.getVal(jsonReps, "/errorCode").asText();
+                } else {
+                    partnerCode = restDataObj.getHttpStatus();
+                }
+            } else {
+                partnerCode = AppConstant.AchEcode.ECODE_SYSTEM_ERROR;
+            }
+            dataObj = transactionRepository.mapErrorCode(AppConstant.Common.ORG_NAPAS, AppConstant.ChannelId.ACH,
+                    partnerCode);
+        } catch (Exception e) {
+            logger.error("Exception when handle handleInqTransNrtNPResp:" + e.getMessage());
+            dataObj.setEcode(AppConstant.SystemResponse.SYSTEM_ERROR_CODE);
+            dataObj.setEdesc(AppConstant.SystemResponse.SYSTEM_ERROR_DESC);
+        }
+        return dataObj;
+    }
 
 }

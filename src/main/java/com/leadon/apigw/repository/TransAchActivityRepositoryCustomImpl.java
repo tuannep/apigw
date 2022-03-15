@@ -48,7 +48,7 @@ public class TransAchActivityRepositoryCustomImpl implements TransAchActivityRep
     @Override
     public DataObj checkExsitPacs028SendToNP(String transId) {
         DataObj res = null;
-        StoredProcedureQuery spQuery = entityManager.createStoredProcedureQuery("PKG_ACH.PR_CHECK_EXIST_INVEST_SEND_NP_BY_DE090")
+        StoredProcedureQuery spQuery = entityManager.createStoredProcedureQuery("PKG_ACH.EXIST_INVEST_SEND_NP_BY_DE090")
                 .registerStoredProcedureParameter(1, String.class, ParameterMode.IN)
                 .registerStoredProcedureParameter(2, String.class, ParameterMode.OUT)
                 .registerStoredProcedureParameter(3, String.class, ParameterMode.OUT)
